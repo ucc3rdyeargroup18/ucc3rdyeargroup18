@@ -1,4 +1,3 @@
-
 Create table CMS_AuthLevels(
  AuthLevelsID int NOT NULL,
  Level1 VarChar(16) NOT NULL,
@@ -225,9 +224,3 @@ foreign key (UserID) references CMS_Users(UserID),
 foreign key (PageID) references CMS_Pages(PageID),
 foreign key (CharityID) references CMS_Charities(CharityID)
 );
-
-ALTER TABLE CMS_Charities
-ADD FOREIGN KEY (CountyID)
-REFERENCES CMS_Counties(CountyID)
-;
-
