@@ -60,7 +60,7 @@ foreign key (CountyID) references CMS_Counties(CountyID)
  CharityPageID int NOT NULL,
  CharityID int NOT NULL,
  PageID int NOT NULL,
- CustomTitile varchar(32)NOT NULL,
+ CustomTitle varchar(32)NOT NULL,
  primary key (CharityPageID),
  foreign key (CharityID) references CMS_Charities(CharityID),
  foreign key (PageID) references CMS_Pages(PageID)
