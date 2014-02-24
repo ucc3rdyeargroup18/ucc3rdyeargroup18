@@ -1,0 +1,26 @@
+
+alter table CMS_Content drop column Nvarchar1;
+alter table CMS_Content drop column Nvarchar2;
+alter table CMS_Content drop column DateTime1;
+alter table CMS_Content drop column DateTime3;
+alter table CMS_Content drop column Int11;
+alter table CMS_Content drop column Int22;
+alter table CMS_Content drop column Float1;
+alter table CMS_Content drop column Float2;
+alter table CMS_Content drop column Bool1;
+alter table CMS_Content drop column Bool2;
+alter table CMS_Content drop column Text1;
+alter table CMS_Content drop column Text2;
+
+alter table CMS_Content add  text1 varchar;
+alter table CMS_Content add  text2 varchar;
+alter table CMS_Content add  text3 varchar;
+alter table CMS_Content add  text4 varchar;
+alter table CMS_Content add  text5 varchar;
+alter table CMS_Content add  text6 varchar;
+alter table CMS_Content add  text7 varchar;
+alter table CMS_Content add  text8 varchar;
+alter table CMS_Content add  text9 varchar;
+alter table CMS_Content add  text10 varchar;
+alter table CMS_Content add  text11 varchar;
+alter table CMS_Content add  text12 varchar;
