@@ -68,7 +68,7 @@
                     . "WHERE DomainName = '{$domain}'";
             $updateResult = mysql_query($updateSQL);
             if($updateResult){
-                //TODO output success message
+                outputCharityForm($errors, $charityDetails, true);
             }
         }
     } else {
@@ -81,7 +81,7 @@
     }
 
     
-    function outputCharityForm(&$errors, &$charityDetails){
+    function outputCharityForm(&$errors, &$charityDetails, $success = false){
         ?>
             <div class="jumbotron">
                 <div class="container">
@@ -94,17 +94,22 @@
               <div class="container">
                   <?php
                   if(count($errors) > 0){
-        echo '<div class="alert alert-danger alert-dismissable">';
-            echo '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>';
-            echo "<strong>We Found ";
-            echo count($errors) == 1 ? 'an Error' : 'Some Errors';
-            echo ": </strong><br />";
-            foreach($errors as $error){
-                echo '<span class="glyphicon glyphicon-warning-sign"></span>&nbsp;&nbsp;';
-                echo $error . '<br />';
-            }
-        echo '</div>';
-    }
+                    echo '<div class="alert alert-danger alert-dismissable">';
+                        echo '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>';
+                        echo "<strong>We Found ";
+                        echo count($errors) == 1 ? 'an Error' : 'Some Errors';
+                        echo ": </strong><br />";
+                        foreach($errors as $error){
+                            echo '<span class="glyphicon glyphicon-warning-sign"></span>&nbsp;&nbsp;';
+                            echo $error . '<br />';
+                        }
+                    echo '</div>';
+                } elseif ($success){ //database has been updated
+                    echo '<div class="alert alert-success alert-dismissable">';
+                        echo '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>';
+                        echo '<span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;The Charity\'s details have been updated!';
+                    echo '</div>';
+                }
                   ?>
                   <form name="cmsForm" onsubmit="return submitForm()">
 
