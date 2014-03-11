@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <form>
+        <h1>
+            Add new Event
+        </h1>
+        ID is auto generated
+        Charity ID drawn from session (session got from charity selected by user)
+        Creator ID drawn from user logged in
+        Created on is time stamp
+        Editor ID is populated from user logged in
+        edited on is timestamp
+        <div>
+            <label for="story">Story:</label>
+            <select id="story">
+            </select>
+            <input id="story" type="text" />
+            <input id="toggle" type="checkbox" />
+            //select is populated with a list of stories applicable to this charity
+            //default option on ddl is No Story
+            //checkbox toggles between ddl and text box (for new story)
+        </div>
+        <div>
+            <label for="title">Title:</label>
+            <input id="title" type="text" />
+        </div>
+        <div>
+            <label for="subTitle">Sub Title:</label>
+            <input id="subTitle" type="text" />
+        </div>
+        <div>
+            <label for="startTime">Start Time:</label>
+            <input id="startTime" type="datetime" />
+        </div>
+        <div>
+            <label for="endTime">End Time:</label>
+            <input id="endTime" type="datetime" />
+        </div>
+        <div>
+            <label for="name">Name:</label>
+            <input id="name" type="text" />
+        </div>
+        <div>
+            <label for="description">Description:</label>
+            <textarea id="description" rows="5" cols="10" ></textarea>
+        </div>
+        <div>
+            <label for="contact">Contact:</label>
+            <input id="contact" type="text" />
+        </div>
+        <div>
+            <label for="tel">Tel:</label>
+            <input id="tel" type="tel" />
+        </div>
+        <div>
+            <label for="email">Email:</label>
+            <input id="email" type="email" />
+        </div>
+        <div>
+            <label for="location">Location:</label>
+            <textarea id="location" rows="5" cols="10" ></textarea>
+        </div>
+        <div>
+            <label for="image1">Image 1:</label>
+            //use the same code you have for the logo upload
+        </div>
+        <div>
+            <label for="image2">Image 2:</label>
+            //use the same code you have for the logo upload
+        </div>
+    </form>
+</body>
+</html>
