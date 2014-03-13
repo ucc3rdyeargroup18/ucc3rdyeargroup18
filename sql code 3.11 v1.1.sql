@@ -18,9 +18,7 @@ Create table CMS_AuthLevels(
  primary key (CharityID)
  );
  
- ALTER TABLE CMS_Charities
-ADD FOREIGN KEY (CountyID)
-REFERENCES CMS_Counties(CountyID);
+ 
 
  Create table CMS_CharityLayout(
  CharityLayoutID int NOT NULL AUTO_INCREMENT,
@@ -32,25 +30,17 @@ REFERENCES CMS_Counties(CountyID);
  primary key (CharityLayoutID)
  );
  
- AlTER TABLE CMS_CharityLayout
- ADD FOREIGN KEY(CharityID)
- REFERENCES CMS_Charities(CharityID);
+ 
  
  Create table CMS_CharityPages(
  CharityPageID int NOT NULL AUTO_INCREMENT,
  CharityID int NOT NULL,
  PageID int NOT NULL,
- CustomTitile varchar(32)NOT NULL,
+ CustomTitle varchar(32)NOT NULL,
  primary key (CharityPageID)
  );
  
- alter table CMS_CharityPages
-add foreign key(CharityID)
-references CMS_Charities(CharityID);
 
-alter table CMS_CharityPages
-add foreign key (PageID) 
-references CMS_Pages(PageID);
 
  Create table CMS_CharityUsers(
  CharityUsersID int NOT NULL AUTO_INCREMENT,
@@ -61,17 +51,7 @@ references CMS_Pages(PageID);
  
 );
 
-alter table CMS_CharityUsers
-add foreign key(CharityID)
-references CMS_Charities(CharityID);
 
-alter table CMS_CharityUsers
-add foreign key (UserID) 
-references CMS_Users(UserID);
-
-alter table CMS_CharityUsers
-add foreign key (AuthLevelsID) 
-references CMS_AuthLevels(AuthLevelsID);
 
 
 Create table CMS_LostFounds(
@@ -96,18 +76,6 @@ isLost tinyint,
 primary key (LostFoundID) 
 );
 
-alter table CMS_LostFounds
-add foreign key (CharityID)
-references CMS_Charities(CharityID);
- 
-
-alter table CMS_LostFounds
-add foreign key (CreatorID) 
-references CMS_Users(UserID);
-
-alter table CMS_LostFounds
-add foreign key (EditorID) 
-references CMS_users(UserID);
 
 
 Create table CMS_Events(
@@ -132,17 +100,6 @@ Image2 blob,
 primary key (EventID) 
 );
 
-alter table CMS_Events
-add foreign key (CharityID)
-references CMS_Charities(CharityID);
-
-alter table CMS_Events
-add foreign key (CreatorID) 
-references CMS_Users(UserID);
-
-alter table CMS_Events
-add foreign key (EditorID) 
-references CMS_users(UserID);
 
 
 Create table CMS_Pets(
@@ -167,18 +124,6 @@ primary key (PetID)
 );
 
 
-alter table CMS_Pets
-add foreign key (CharityID)
-references CMS_Charities(CharityID);
- 
-alter table CMS_Pets
-add foreign key (CreatorID) 
-references CMS_Users(UserID);
-
-alter table CMS_Pets
-add foreign key (EditorID) 
-references CMS_users(UserID);
-
 
 Create table CMS_Counties(
 CountyID int NOT NULL,
@@ -198,18 +143,7 @@ primary key (DonationID)
 
 );
 
-alter table CMS_Donations
-add foreign key (CharityID)
- references CMS_Charities(CharityID);
 
-alter table CMS_Donations
-add foreign key(PageID)
-references CMS_Pages(PageID);
- 
-/*alter table CMS_Donations
-add foreign key(ContentID)
-references CMS_Content(ContentID);
-*/
 
 Create table CMS_Pages(
 PageID int NOT NULL AUTO_INCREMENT,
@@ -219,9 +153,7 @@ AuthLevelsID int NOT NULL,
 primary key (PageID)
 );
 
-alter table CMS_Pages
-add foreign key (AuthLevelsID) 
-references CMS_AuthLevels(AuthLevelsID);
+
 
 Create table CMS_ProposedCharities(
 ProposedCharitiesID int NOT NULL AUTO_INCREMENT ,
@@ -238,9 +170,7 @@ CreatorID int NOT NULL,
 primary key (ProposedCharitiesID)
 );
 
-alter table CMS_ProposedCharities
-add foreign key (CreatorID)
-references CMS_Users(UserID);
+
 
 Create table CMS_Users(
 UserID int NOT NULL AUTO_INCREMENT,
@@ -257,9 +187,7 @@ Admini tinyint NOT NULL,
 primary key (UserID)
 );
 
-alter table CMS_Users
-add foreign key (CountyID) 
-references CMS_Counties(CountyID);
+
 
 Create table CMS_UsersPages(
 UserPageID int NOT NULL AUTO_INCREMENT,
@@ -269,17 +197,7 @@ CharityID int NOT NULL,
 primary key (UserPageID)
 );
 
-alter table CMS_UsersPages
-add foreign key (UserID) 
-references CMS_Users(UserID);
 
-alter table CMS_UsersPages
-add foreign key (PageID) 
-references CMS_Pages(PageID);
-
-alter table CMS_UsersPages
-add foreign key (CharityID) 
-references CMS_Charities(CharityID);
 
 Create table CMS_Stories(
 StoryID int NOT NULL AUTO_INCREMENT,
@@ -288,9 +206,7 @@ CharityID INT NOT NULL ,
 primary key (StoryID)
 );
 
-alter table CMS_Stories
-add foreign key (CharityID) 
-references CMS_Charities(CharityID);
+
 
 
 Create table CMS_AccessRequest(
@@ -303,17 +219,7 @@ foreign key (PageID) references CMS_Pages(PageID),
 foreign key (CharityID) references CMS_Charities(CharityID)
 );
 
-alter table CMS_AccessRequest
-add foreign key (UserID) 
-references CMS_Users(UserID);
 
-alter table CMS_AccessRequest
-add foreign key (PageID) 
-references CMS_Pages(PageID);
-
-alter table CMS_AccessRequest
-add foreign key (CharityID) 
-references CMS_Charities(CharityID);
 
 Create table CMS_Contents(
 ContentID int NOT NULL AUTO_INCREMENT,
@@ -326,17 +232,7 @@ PetID int NOT NULL,
 primary key (ContentID)
 );
 
-alter table CMS_Contents
-add foreign key (LostFoundID)
-references CMS_LostFounds(LostFoundID);
 
-alter table CMS_Contents
-add foreign key (EventID)
-references CMS_Events(EventID);
-
-alter table CMS_Contents
-add foreign key (PetID)
-references CMS_Pets(PetID);
 
 
 Create table CMS_StoryContents(
@@ -346,13 +242,7 @@ ContentID int NOT NULL,
 primary key (StoryContentID)
 );
 
-alter table CMS_StoryContents
-add foreign key(StoryID)
-references CMS_Stories(StoryID);
 
-alter table CMS_StoryContents
-add foreign key(ContentID)
-references CMS_Contents(ContentID);
 
 
 
@@ -408,4 +298,157 @@ insert into CMS_Counties(CountyID,County) values(32,'Wicklow');
 
 
 
+ALTER TABLE CMS_Charities
+ADD FOREIGN KEY (CountyID)
+REFERENCES CMS_Counties(CountyID);
 
+AlTER TABLE CMS_CharityLayout
+ ADD FOREIGN KEY(CharityID)
+ REFERENCES CMS_Charities(CharityID);
+
+  alter table CMS_CharityPages
+add foreign key(CharityID)
+references CMS_Charities(CharityID);
+
+alter table CMS_CharityPages
+add foreign key (PageID) 
+references CMS_Pages(PageID);
+
+alter table CMS_CharityUsers
+add foreign key(CharityID)
+references CMS_Charities(CharityID);
+
+alter table CMS_CharityUsers
+add foreign key (UserID) 
+references CMS_Users(UserID);
+
+alter table CMS_CharityUsers
+add foreign key (AuthLevelsID) 
+references CMS_AuthLevels(AuthLevelsID);
+
+alter table CMS_LostFounds
+add foreign key (CharityID)
+references CMS_Charities(CharityID);
+ 
+
+alter table CMS_LostFounds
+add foreign key (CreatorID) 
+references CMS_Users(UserID);
+
+alter table CMS_LostFounds
+add foreign key (EditorID) 
+references CMS_users(UserID);
+
+alter table CMS_Events
+add foreign key (CharityID)
+references CMS_Charities(CharityID);
+
+alter table CMS_Events
+add foreign key (CreatorID) 
+references CMS_Users(UserID);
+
+alter table CMS_Events
+add foreign key (EditorID) 
+references CMS_users(UserID);
+
+alter table CMS_Events
+add foreign key (CharityID)
+references CMS_Charities(CharityID);
+
+alter table CMS_Events
+add foreign key (CreatorID) 
+references CMS_Users(UserID);
+
+alter table CMS_Events
+add foreign key (EditorID) 
+references CMS_users(UserID);
+
+
+alter table CMS_Pets
+add foreign key (CharityID)
+references CMS_Charities(CharityID);
+ 
+alter table CMS_Pets
+add foreign key (CreatorID) 
+references CMS_Users(UserID);
+
+alter table CMS_Pets
+add foreign key (EditorID) 
+references CMS_users(UserID);
+
+alter table CMS_Donations
+add foreign key (CharityID)
+ references CMS_Charities(CharityID);
+
+alter table CMS_Donations
+add foreign key(PageID)
+references CMS_Pages(PageID);
+ 
+/*alter table CMS_Donations
+add foreign key(ContentID)
+references CMS_Content(ContentID);
+*/
+
+alter table CMS_Pages
+add foreign key (AuthLevelsID) 
+references CMS_AuthLevels(AuthLevelsID);
+
+alter table CMS_ProposedCharities
+add foreign key (CreatorID)
+references CMS_Users(UserID);
+
+alter table CMS_ProposedCharities
+add foreign key (CreatorID)
+references CMS_Users(UserID);
+
+alter table CMS_Users
+add foreign key (CountyID) 
+references CMS_Counties(CountyID);
+
+alter table CMS_UsersPages
+add foreign key (UserID) 
+references CMS_Users(UserID);
+
+alter table CMS_UsersPages
+add foreign key (PageID) 
+references CMS_Pages(PageID);
+
+alter table CMS_UsersPages
+add foreign key (CharityID) 
+references CMS_Charities(CharityID);
+
+alter table CMS_Stories
+add foreign key (CharityID) 
+references CMS_Charities(CharityID);
+
+alter table CMS_AccessRequest
+add foreign key (UserID) 
+references CMS_Users(UserID);
+
+alter table CMS_AccessRequest
+add foreign key (PageID) 
+references CMS_Pages(PageID);
+
+alter table CMS_AccessRequest
+add foreign key (CharityID) 
+references CMS_Charities(CharityID);
+
+alter table CMS_Contents
+add foreign key (LostFoundID)
+references CMS_LostFounds(LostFoundID);
+
+alter table CMS_Contents
+add foreign key (EventID)
+references CMS_Events(EventID);
+
+alter table CMS_Contents
+add foreign key (PetID)
+references CMS_Pets(PetID);
+
+alter table CMS_StoryContents
+add foreign key(StoryID)
+references CMS_Stories(StoryID);
+
+alter table CMS_StoryContents
+add foreign key(ContentID)
+references CMS_Contents(ContentID);
