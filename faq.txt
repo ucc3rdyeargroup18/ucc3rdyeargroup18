@@ -1,0 +1,34 @@
+How do I add a photo to my post?
+You are allowed to add up to 2 pictures per post. Click on the Choose File button in the form provided, and browse to the photo you want. Photos must be in a jpg/png format.
+
+Can I see who donated?
+Yes, click on My dashboard on the menu, click Donations in the side bar
+
+How do I register?
+Step by need, need functional website to do
+
+How do I register a charity?
+Register as a user first, then select create charity from the admin section
+Fill out the charity details, and hit submit.
+The application will now be reviewed by our administrators, to make sure its legitimate.
+Allow up to 3 working days for acceptance of the application
+
+How do i make a donation?
+Click one of the many donate buttons throughout the site,this will redirect you to an external paypal site
+All donations are made to a central paypal account, and are then distributed to the charities. 
+This site does not take any commission on donations made through the site, so all of your donation goes to the charity, excluding any paypal charges.
+A donation can be made to aid a specific post, or to help a charity in general
+
+Why has my post disappeared?
+Your post may have been deleted as it contained offensive/trademarked material, or was considered spam
+If you it was deleted in error, contact the charity's email address listed on the site with details of your original post
+
+How do I make a post?
+To make a post, you need to be registered on the site(link that) and you need access to a page (link that). 
+Once you are granted access by the charity, a list of all the pages you have access to will appear on your dashboard.
+
+How do I request access to a page?
+Go to your dashboard, click request access on the sidebar.
+Select the charity and specific page you want access to post on.
+
+If you question was not listed above, fill out the form below to contact the site administrators.
