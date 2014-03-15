@@ -44,7 +44,7 @@ if(isset($_GET['anml'])){
           //$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];
           //TODO update to use new databse
           
-        $getLostPetsSQL = "SELECT [Name], [Details], [Image1], [ID] FROM [CMS_LostFound] WHERE CharityID = {$info['CharityID']} AND [isLost] = 1 ORDER BY [CreatedOn] DESC";
+        $getLostPetsSQL = "SELECT Name, Details, Image1, LostFoundID FROM CMS_LostFounds WHERE CharityID = {$info['CharityID']} AND isLost = 1 ORDER BY CreatedOn DESC";
         $result = mysql_query($getLostPetsSQL);
         while($row = mysql_fetch_assoc($result))
         {
