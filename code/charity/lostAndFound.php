@@ -43,6 +43,14 @@ if(isset($_GET['anml'])){
 //          );
           //$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];
           //TODO update to use new databse
+          
+        $getLostPetsSQL = "SELECT [Name], [Details], [Image1], [ID] FROM [CMS_LostFound] WHERE CharityID = {$info['CharityID']} AND [isLost] = 1 ORDER BY [CreatedOn] DESC";
+        $result = mysql_query($getLostPetsSQL);
+        while($row = mysql_fetch_assoc($result))
+        {
+            $content[] = $row;
+        }
+                    
         foreach($content as $animal){
             //var_dump($animal);
             if($count%2 == 0){
@@ -56,9 +64,9 @@ if(isset($_GET['anml'])){
             echo 'images/clucker.jpg';
             echo '">
               <h2>';
-            echo $animal['Title']; //print the animals name
+            echo $animal['Name']; //print the animals name
             echo'</h2>';
-              echo $animal['text1'];
+              echo $animal['Details'];
               echo '<p><a class="btn btn-default" href="lostAndFound/';
               //echo $animal['animalPermaID'];
               echo '" role="button">View details »</a></p>
