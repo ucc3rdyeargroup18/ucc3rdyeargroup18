@@ -7,7 +7,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start(); //start a session if one does not exist
 }
 if(isset($_SESSION['validUser']) && $_SESSION['validUser']){//user is already logged in
-    header("Location: /cms.php");
+    header("Location: {$_SESSION['lastDomain']}/cms");
 }
 
 $documentRoot = filter_input(INPUT_SERVER, 'DOCUMENT_ROOT', FILTER_SANITIZE_URL);
@@ -16,6 +16,13 @@ set_include_path( get_include_path() . PATH_SEPARATOR . $documentRoot );
 require_once 'database_functions.php';
 connect_to_database();
 $errors = array();
+
+if(isset($_GET['auth'])){
+    $errors[] = "You must be logged in to do that.";
+}
+if(isset($_GET['timeout'])){
+    $errors[] = "You have been logged out due to inactivity.";
+}
 
     $submitted = filter_input(INPUT_POST, 'submit', FILTER_SANITIZE_STRING);
     if(!$submitted || $submitted != "Login"){ //if the login form has not been submitted
@@ -54,7 +61,7 @@ $errors = array();
     $_SESSION['siteAdmin'] = mysql_result($loginResult, 0, 'Admini') == '1' ? true : false;
     $_SESSION['firstName'] = mysql_result($loginResult, 0, 'FirstName');
     
-    header('Refresh: 5; URL=' . $redirectURL);
+    header('Refresh: 0; URL=' . $redirectURL);
     echo '<h1>Welcome back ' . $_SESSION['firstName'] . '! You will now be redirected';
     
     /**
@@ -77,6 +84,7 @@ $errors = array();
 <?php
     if(count($errors) > 0){
         echo '<div class="alert alert-danger alert-dismissable">';
+            echo '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>';
             echo "<strong>We Found ";
             echo count($errors) == 1 ? 'an Error' : 'Some Errors';
             echo ": </strong><br />";
@@ -84,7 +92,6 @@ $errors = array();
                 echo '<span class="glyphicon glyphicon-warning-sign"></span>&nbsp;&nbsp;';
                 echo $error . '<br />';
             }
-            echo '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>';
         echo '</div>';
     }
 ?>
