@@ -20,6 +20,7 @@
         $charityDetails['CharityNo'] = filter_input(INPUT_POST, 'charityNo', FILTER_VALIDATE_INT);
         $charityDetails['BIC'] = filter_input(INPUT_POST, 'bic', FILTER_SANITIZE_STRING);
         $charityDetails['IBAN'] = filter_input(INPUT_POST, 'iban', FILTER_SANITIZE_STRING);
+        $charityDetails['Description'] = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_MAGIC_QUOTES);
         
         //validate the input - all fields are required
         if($charityDetails['Name'] === ""){
@@ -51,6 +52,9 @@
             //TODO validate IBAN further
             $errors['IBAN'] = "Please enter the IBAN (International Bank Account Number) for your charitiy's bank account";
         }
+        if($charityDetails['Description'] === ""){
+            $errors['Description'] = "You must enter a description of your charity";
+        }
         
         
         if(count($errors) > 0){
@@ -64,12 +68,15 @@
                     . "Phone = '{$charityDetails['Phone']}', "
                     . "CharityNo = '{$charityDetails['CharityNo']}', "
                     . "BIC = '{$charityDetails['BIC']}', "
-                    . "IBAN = '{$charityDetails['IBAN']}' "
+                    . "IBAN = '{$charityDetails['IBAN']}', "
+                    . "Description = '{$charityDetails['Description']}' "
                     . "WHERE DomainName = '{$domain}'";
             $updateResult = mysql_query($updateSQL);
             if($updateResult){
                 outputCharityForm($errors, $charityDetails, true);
-            }
+            } else{
+                //TODO Output Error 
+           }
         }
     } else {
         $detailsSQL = "SELECT * FROM cms_charities WHERE DomainName = '{$domain}'";
@@ -148,6 +155,11 @@
               <input name="bic" id="bic" type="text" class="form-control" required value="<?=$charityDetails['BIC']?>">
               <label for="iban">IBAN</label>
               <input name="iban" id="iban" type="text" class="form-control" required value="<?=$charityDetails['IBAN']?>">
+              
+              <label for="description">Tell Us About Your Charity</label>
+              <div class="well">
+                  <textarea id="description-textarea" class="wysiwyg-textarea" name="description" placeholder="This will appear on your charity's home page"><?=stripslashes($charityDetails['Description'])?></textarea>
+              </div>
 
           </br>
           <button type="submit" class="btn" id="submitButton" name="submission" value="true">Submit Changes</button>
