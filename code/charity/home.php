@@ -16,12 +16,12 @@ require_once 'header.php';
       <!-- Begin page content -->
       <div class="container">
           <div class="page-header">
-            <h1><?=$headers['Header1']?></h1>
+            <h1><?=$info['Name']?></h1>
           </div>
         <div class="col-md-9">
             <?php
-                  echo '<p>' . $charityDetails['description'] . '<p>';
-            ?>
+                  echo '<p>' . $info['Description'] . '<p>';
+            ?>            
         </div>
           <?php
           require_once 'sidebar.php';
