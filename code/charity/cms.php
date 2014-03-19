@@ -1,5 +1,4 @@
 <?php
-
 /* 
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -8,20 +7,35 @@
 
 define('SECURE', true);
 
-//TODO check if the user is logged in and what priveleges they have
-//TODO redirect the user to the login form if they are not logged in
-
 $documentRoot = filter_input(INPUT_SERVER, 'DOCUMENT_ROOT', FILTER_SANITIZE_URL);
 set_include_path( get_include_path() . PATH_SEPARATOR . $documentRoot );
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start(); //start a session if one does not exist
 }
+
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+    // last request was more than 30 minutes ago
+    session_unset();     // unset $_SESSION variable for the run-time 
+    session_destroy();   // destroy session data in storage
+    header("Location: /login.php?timeout");
+    die();
+}
+$_SESSION['LAST_ACTIVITY'] = time(); // update last activity time stamp
+
 if(!isset($_SESSION['validUser']) || !$_SESSION['validUser']){//user is not logged in
     header("Location: /login.php?auth");
+    die();
 }
 
 require_once 'getDetails.php';
+
+$authSQL = "SELECT * FROM cms_charityusers WHERE UserID = {$_SESSION['userID']} AND CharityID = {$info['CharityID']}";
+$authResult = mysql_query($authSQL);
+$noAuth = false;
+if(mysql_num_rows($authResult) != 1){//the user is not authorised for this charity
+    $noAuth = true;
+}
 ?>
 
 
@@ -42,12 +56,49 @@ require_once 'getDetails.php';
 
     <!-- Custom styles for this template -->
     <link href="/css/dashboard.css" rel="stylesheet">
+    
+    <!-- Color Picker CSS -->
+    <link href="/css/bootstrap-colorpicker.min.css" rel="stylesheet">
+    
+    <!-- tablesorter CSS -->
+    <link href="/css/tablesort.theme.default.css" rel="stylesheet">
+    
+    <!-- Include CSS & JS for WYSIWIG Editor -->
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap-wysihtml5.css" />
+    <script src="/js/wysihtml5-0.3.0.js"></script>
+    <script src="/js/jquery-1.7.2.min.js"></script>
+    <script src="/js/bootstrap3-wysihtml5.js"></script>
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
+    
+    <?php
+     if($noAuth){
+         echo '</head>';
+         echo '<body>';
+         cms_top_nav();
+         echo '<div class="jumbotron">
+                <div class="container">
+                  <h1>Authorisation Failed</h1>
+                  <p>You are not authorised to manage this charity</p>';
+                echo '</div>
+              </div>';
+                echo '<div class="well">';
+                echo '<div class="container">';
+                  echo '<p>You are logged in as ' . $_SESSION['email'] . '</p>';
+                  echo '<p>You can find a list of charities your have authorisation for below.</p>';
+                  echo '<ul>';
+                  get_authd_charities();
+                  echo '</ul>';
+                  echo '</div>';
+                  echo '</div>';
+         cms_footer();
+         die();
+     }
+    ?>
     
     <script>
         function new_aso(){
@@ -56,10 +107,10 @@ require_once 'getDetails.php';
                         aso=new XMLHttpRequest();
                 } catch (e) {// Internet Explorer
                         try {
-                                aso=new ActiveXObject("Msxml2.XMLHTTP")
+                                aso=new ActiveXObject("Msxml2.XMLHTTP");
                         } catch (e) {
                                 try {
-                                        aso=new ActiveXObject("Microsoft.XMLHTTP")
+                                        aso=new ActiveXObject("Microsoft.XMLHTTP");
                                 } catch (e) {
                                         alert("Your browser does not support AJAX!");
                                 }
@@ -71,6 +122,7 @@ require_once 'getDetails.php';
         var pages = new Array();
         pages[0] = "editCharityDetails.php";
         pages[1] = "editTemplate.php";
+        pages[3] = "manageDonations.php";
         var current = -1;
         function content(id){
             current = id;
@@ -94,13 +146,14 @@ require_once 'getDetails.php';
                 }
             }
 
-            document.getElementById("cmsContent").innerHTML="<h4>Loading Content...</h4><img style=\"height: 200px;\" src=\"ajax-loader.gif\" />";
+            document.getElementById("cmsContent").innerHTML="<h4>Loading Content...</h4><img style=\"height: 200px;\" src=\"/img/ajax-loader.gif\" />";
             //document.getElementById("requestTime").innerHTML="";
             ASO.onreadystatechange=function(){
                     if(ASO.readyState===4){
                             if(ASO.status===200){
                                     document.getElementById("cmsContent").innerHTML=ASO.responseText;
                                     document.getElementById("cmsItem" + id).className += " active";
+                                    onAJAXLoad();
                             } else if (ASO.status === 404){
                                     document.getElementById("cmsContent").innerHTML="The requested file was not found";
                             } else{
@@ -125,6 +178,10 @@ require_once 'getDetails.php';
                     params += element.getAttribute("name") + "=" + encodeURIComponent(element.value) + "&";
                 }
             }
+            if(current === 1){
+                params += "file=" + logoData;
+               // document.body.innerHTML = "<pre>" + params + "</pre>";
+            }
             if(!requirementsMet){
                 //document.getElementById("submitButton").className = "btn btn-warning";
                 return false;
@@ -136,6 +193,7 @@ require_once 'getDetails.php';
                             if(ASO.status===200){
                                     document.getElementById("cmsContent").innerHTML=ASO.responseText;
                                     //document.getElementById("submitButton").className = "btn btn-success";
+                                    onAJAXLoad();
                                     return false;
                             } else if (ASO.status === 404){
                                     document.getElementById("cmsContent").innerHTML="The requested file was not found";
@@ -152,12 +210,99 @@ require_once 'getDetails.php';
             ASO.send(params);
             return false;
         }
+        
+        var logoData;
+        function onAJAXLoad(){
+            //initialise color pickers
+            $('.color').colorpicker();
+            
+            // Check for the various File API support.
+            if (window.File && window.FileReader && window.FileList && window.Blob) {
+              // Great success! All the File APIs are supported.
+            } else {
+              alert('The File APIs are not fully supported in this browser. Please upgrade your browser.');
+            }  
+            if(current === 1){
+                var reader = new FileReader(); 
+                var fileInput = document.getElementById('file');
+                fileInput.addEventListener('change', function(e) {
+			var file = fileInput.files[0];
+			var textType = /image.*/;
+
+			if (file.type.match(textType)) {
+				var reader = new FileReader();
+
+				reader.onload = function(e) {
+					//fileDisplayArea.innerText = reader.result;
+                                        logoData = reader.result;
+				};
+
+				reader.readAsDataURL(file);	
+			} else {
+				//fileDisplayArea.innerText = "File not supported!"
+                                alert("file type");
+			}
+		});
+            }
+            
+            $('.wysiwyg-textarea').wysihtml5({"link": false, "image": false});
+        }
     </script>
   </head>
 
-  <body>
+  <body onload="content(0);">
       
-      <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <?php
+      cms_top_nav();
+      ?>
+      
+      <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+          <ul class="nav nav-sidebar"><!-- pages all charities will need -->
+            <li class="navbar-section-header">Manage Site</li>
+            <li id="cmsItem0"><a href="javascript:content(0);">Edit Charity Details</a></li>
+            <li id="cmsItem1"><a href="javascript:content(1);">Edit Theme</a></li>
+            <li id="cmsItem2"><a href="javascript:content(2);">Choose Pages</a></li>
+            <li id="cmsItem3"><a href="javascript:content(3);">Manage Donations</a></li>
+          </ul>
+          <ul class="nav nav-sidebar">
+              <li class="navbar-section-header">Manage Pages</li>
+              <li><a href="">Page 1</a></li>
+              <li><a href="">Page 2</a></li>
+          </ul>
+          <ul class="nav nav-sidebar">
+              <li class="navbar-section-header">Manage Users</li>
+              <li><a href="">Add/Remove Users</a></li>
+              <li><a href="">Grant/Revoke Page Access</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+          
+
+        <div id="cmsContent">
+            
+        </div>
+        </div>
+      </div>
+    </div>
+      
+      <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <!--script src="https://code.jquery.com/jquery-1.10.2.min.js"></script-->
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/docs.min.js"></script>
+    <script src="/js/bootstrap-colorpicker.js"></script>
+  </body>
+</html>
+
+<?php
+
+function cms_top_nav(){
+    global $info, $charityDomain;
+    ?>
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
       <div class="container-fluid">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -171,12 +316,13 @@ require_once 'getDetails.php';
           
           <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">View Site</a></li>
+            <li><a href="/<?=$charityDomain?>/home">View Site</a></li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Your Charities <b class="caret"></b></a>
                 <ul class="dropdown-menu">
-                  <li><a href="#">Find A Hen</a></li>
-                  <li><a href="#">Find A Cat</a></li>
+                    <?php
+                        get_authd_charities();
+                    ?>
                 </ul>
               </li>
             <li class="dropdown">
@@ -194,43 +340,39 @@ require_once 'getDetails.php';
         </div>
           </div>
     </div>
-      
-      <div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
-          <ul class="nav nav-sidebar"><!-- pages all charities will need -->
-            <li id="cmsItem0"><a href="javascript:content(0);">Edit Charity Details</a></li>
-            <li id="cmsItem1"><a href="javascript:content(1);">Edit Theme</a></li>
-            <li id="cmsItem2"><a href="javascript:content(2);">Edit Charity Pages</a></li>
-            <li id="cmsItem3"><a href="javascript:content(3);">Edit Home Page</a></li>
-          </ul>
-          <ul class="nav nav-sidebar">
-              <li><a href="">Manage Pages</a></li>
-              <li><a href="">Manage Users</a></li>
-          </ul>
-          <ul class="nav nav-sidebar">
-            <li><a href="#">Overview</a></li>
-            <li><a href="#">Reports</a></li>
-            <li><a href="#">Analytics</a></li>
-          </ul>
-        </div>
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          
+<?php
+}
 
-        <div id="cmsContent">
-            Loading...
-            <? //TODO change initial content
-            ?>
-        </div>
-        </div>
-      </div>
-    </div>
-      
+function cms_footer(){
+    ?>
       <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <!--script src="https://code.jquery.com/jquery-1.10.2.min.js"></script-->
     <script src="/js/bootstrap.min.js"></script>
     <script src="/js/docs.min.js"></script>
+    <script src="/js/bootstrap-colorpicker.js"></script>
   </body>
 </html>
+<?php
+}
+
+function get_authd_charities(){
+    $authCharitiesSQL = "SELECT CharityID FROM cms_charityusers WHERE UserID = {$_SESSION['userID']}";
+    $authCharitiesResult = mysql_query($authCharitiesSQL);
+    $charityDetailsSQL = "SELECT Name, DomainName FROM cms_charities WHERE"; 
+    $numRows = mysql_num_rows($authCharitiesResult);
+    $i = 1;
+    while($row = mysql_fetch_assoc($authCharitiesResult)){
+        $charityDetailsSQL .= " CharityID = ";
+        $charityDetailsSQL .= $row['CharityID'];
+        if($numRows != $i){
+            $charityDetailsSQL .= " OR";
+        }
+        $i++;
+    }
+    $charityDetailsResult = mysql_query($charityDetailsSQL);
+    while($row = mysql_fetch_assoc($charityDetailsResult)){
+        echo "<li><a href=\"/{$row['DomainName']}/cms\">{$row['Name']}</a></li>";
+    }
+}
