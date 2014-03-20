@@ -24,7 +24,7 @@ if(isset($_GET['anml'])){
         </div>
           <div class="col-md-9">
         <p class="lead">Below is a list of chickens currently missing from their coops</p>
-        <p>If you have lost or found a hen, please report it on our <a href="#lost">Lost and Found</a> page</p>
+        <p>If you have lost or found a hen, please report it on our <a href="submitLost">Lost and Found</a> page</p>
         <hr />
         <div class="container marketing">
 
@@ -44,7 +44,7 @@ if(isset($_GET['anml'])){
           //$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];
           //TODO update to use new databse
           
-        $getLostPetsSQL = "SELECT Name, Details, Image1, LostFoundID FROM CMS_LostFounds WHERE CharityID = {$info['CharityID']} AND isLost = 1 ORDER BY CreatedOn DESC";
+        $getLostPetsSQL = "SELECT Name, Details, Image1, LostFoundID, LastSeen FROM CMS_LostFounds WHERE CharityID = {$info['CharityID']} AND isLost = 1 ORDER BY CreatedOn DESC";
         $result = mysql_query($getLostPetsSQL);
         while($row = mysql_fetch_assoc($result))
         {
@@ -58,14 +58,15 @@ if(isset($_GET['anml'])){
             }
             echo '<div class="col-lg-4">
               <img class="img-circle" data-src="holder.js/140x140" alt="140x140" style="width: 140px; height: 140px;" src="/';
-            //TODO change image src to BLOB ($animal['Image1'])
-            //echo $animal['Image1']; //display the image of the missing animal
-            //echo data_uri($animal['Image1'], 'image/jpeg');
-            echo 'images/clucker.jpg';
+            echo 'images/lostAndFound/' . $animal['Image1'];
             echo '">
               <h2>';
             echo $animal['Name']; //print the animals name
             echo'</h2>';
+             $date = date_parse_from_format("Y-m-d H:i:s", $animal['LastSeen']);
+             $time = mktime($date['hour'], $date['minute'], $date['second'], $date['month'], $date['day'], $date['year']);
+             $animal['LastSeen'] = date("d/m/Y @ H:i", $time);
+              echo "Last Seen: " . $animal['LastSeen'] . '<br />';
               echo $animal['Details'];
               echo '<p><a class="btn btn-default" href="lostAndFound/';
               //echo $animal['animalPermaID'];
