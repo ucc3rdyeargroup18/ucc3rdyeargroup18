@@ -140,12 +140,12 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
                 . "VALUES((SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}'),"
                 . "{$_SESSION['userID']}, NOW(), '{$petDetails['LastSeen']}', '{$petDetails['Name']}', '{$petDetails['Description']}', '{$petDetails['ContactName']}', '{$petDetails['Number']}', '{$petDetails['Email']}', '{$petDetails['Details']}', 1);";
         
-        //TODO Uncomment $insertResult = mysql_query($insertSQL);
-        $insertID = mysql_insert_id();
+        $insertResult = mysql_query($insertSQL);
+        $lfInsertID = mysql_insert_id();
      //attempt to store the file
         $path = $_FILES['img1']['name'];
         $ext = pathinfo($path, PATHINFO_EXTENSION);
-        $filename = $insertID . "_a." . $ext;
+        $filename = $lfInsertID . "_a." . $ext;
         $file = file_get_contents($_FILES['img1']['tmp_name']);
         file_put_contents("C:\wamp\www\\3rdyearproj\images\lostAndFound\\" . $filename, $file);
         //move_uploaded_file seems to create the file, put doesn't moce the contents
@@ -155,17 +155,39 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
         if($hasImg2){
             $path = $_FILES['img2']['name'];
             $ext = pathinfo($path, PATHINFO_EXTENSION);
-            $filename = $insertID . "_b." . $ext;
+            $filename = $lfInsertID . "_b." . $ext;
             $file = file_get_contents($_FILES['img2']['tmp_name']);
             file_put_contents("C:\wamp\www\\3rdyearproj\images\lostAndFound\\" . $filename, $file);
             $imgSQL .= ", Image2 = '{$filename}'";
         }
-        $imgSQL .= " WHERE LostFoundID = {$insertID};";
+        $imgSQL .= " WHERE LostFoundID = {$lfInsertID};";
         $imgResult = true;//TODO uncomment $imgResult = mysql_query($imgSQL);
         $petDetails['Image2'] = $filename;
         if($imgResult){
             //output success
-            ?>
+        
+        //INSERT INTO CMS_Content
+        $insertContentSQL = "INSERT INTO CMS_Content VALUES ('CMS_LostFounds', '" . $lfInsertID . "')";
+        $insertContentResult = mysql_query($insertContentSQL);
+        //GET ContentINsertID
+        $insertContentID = mysql_insert_id();
+        if($newStory || $existingStory){
+            if($newStory){
+                //INSERT INTO CMS_STORIES
+                $insertStorySQL = "INSERT INTO CMS_Stories VALUES ($storyName, '" . $info['CharityID'] . "')";
+                $insertStoryResult = mysql_query($insertStorySQL);
+                //GET STORYINSERTID
+                $insertStoryID = mysql_insert_id();
+            } else {
+                //GETSTORYID FROM DDL VALUE
+                $insertStoryID = $storyID;
+            }
+            //INSERT INTO CMS_StoryCONTENT
+            $insertStoryContentSQL = "INSERT INTO CMS_StoryContent VALUES ('". $insertStoryID . "', '" . $insertContentID . "')";
+            $insertStoryContentResult = mysql_query($insertStoryContentSQL);
+        }
+        
+        ?>
 <!-- Begin page content -->
       <div class="container">
         <div class="page-header">
