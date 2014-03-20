@@ -47,7 +47,7 @@ if(isset($_GET['anml'])){
             } 
             else
             {
-                echo '<img class="img-circle" src="/images/events/'. $event['Image1'] . '" style="max-width:100%;">';  
+                echo '<img class="img-circle center" src="/images/events/'. $event['Image1'] . '" style="max-width:100%; max-height: 30em;">';  
             }
                 echo '<br class="clear-both" /><hr class="clear-both">';
                 echo '<p class="well clear-both">';
@@ -56,9 +56,9 @@ if(isset($_GET['anml'])){
                 echo '<p>';
                     echo 'Contact: ' . $event['Contact'] . ' on ' . $event['Number1'] . ' or email ' . $event['Email'] . ' for more information';
                 echo '</p>';
-                echo '<p>';
+                echo '<em class="text-muted">';
                     echo 'Created by: ' . $event['Creator'] . ' on ' . $event['CreatedOn'] . '<br />Last edited by ' . $event['Editor'] . ' on ' . $event['EditedOn'];
-                echo '</p>';
+                echo '</em>';
             echo '</div> <!-- /.container marketing -->';
         echo '</div> <!-- /.col-md-9 -->'; 
         require_once 'sidebar.php';
