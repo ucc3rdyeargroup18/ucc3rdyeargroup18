@@ -27,19 +27,19 @@ if(isset($_GET['anml'])){
             echo '<h1>' . $adoptable['Name'] . '</h1>';
         echo '</div>';
         echo '<div class="col-md-9">';
-            echo '<p class="lead">';
+            echo '<p class="lead">Location: ';
                 echo $adoptable['Location'];
             echo '</p>';
             echo '<hr />';
             echo '<div class="col-md-12 container marketing">';
             if($adoptable['Image2'] != null)
             {
-                echo '<img class="pull-left" src="/images/adoptableandfound/'. $adoptable['Image1'] . '" style="max-width:40%;">';
-                echo '<img class="pull-right" src="/images/adoptableandfound/'. $adoptable['Image2'] . '" style="max-width:40%;">';
+                echo '<img class="pull-left" src="/images/pets/'. $adoptable['Image1'] . '" style="max-width:40%;">';
+                echo '<img class="pull-right" src="/images/pets/'. $adoptable['Image2'] . '" style="max-width:40%;">';
             } 
             else
             {
-                echo '<img class="center" src="/images/adoptableandfound/'. $adoptable['Image1'] . '" style="max-width:100%; max-height: 30em;">';  
+                echo '<img class="center" src="/images/pets/'. $adoptable['Image1'] . '" style="max-width:100%; max-height: 30em;">';  
             }
                 echo '<br class="clear-both" /><hr class="clear-both">';
                 echo '<p class="well clear-both">';
