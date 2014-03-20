@@ -16,16 +16,22 @@ $petDetails = array();
 if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form has been submitted, process it
     $petDetails['Name'] = trim(filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING));
     $lastSeen = filter_input(INPUT_POST, 'lastSeen', FILTER_SANITIZE_STRING);
-    $timeString = strtotime($lastSeen);
-    $petDetails['LastSeen'] = date("Y-m-d H:i:s", $timeString);
-    //TODO Make datetime standard across browsers
+    if(validateDate($lastSeen)){
+        $date = date_parse_from_format("d/m/Y H:i", $lastSeen);
+        $time = mktime($date['hour'], $date['minute'], $date['second'], $date['month'], $date['day'], $date['year']);
+        $petDetails['LastSeen'] = date("Y-m-d H:i:s", $time);
+        if($time > time()){
+            $errors['lastSeen'] = "Woah there time traveller! Last Seen Date must be in the past!";
+        }
+    } else{
+        $errors['lastSeen'] = "Date Last Seen must be in the format dd/mm/yyyy HH:MM (eg. " . date("d/m/Y H:i") . ")";
+    }
     $petDetails['Description'] = trim(filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING));
     $petDetails['ContactName'] = trim(filter_input(INPUT_POST, 'contactName', FILTER_SANITIZE_STRING));
     $number = filter_input(INPUT_POST, 'number', FILTER_SANITIZE_STRING);
     $petDetails['Email'] = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
     $petDetails['Details'] = trim(filter_input(INPUT_POST, 'details', FILTER_SANITIZE_STRING));
     
-    //TODO handle file uploads
     
     if($petDetails['Name'] === ""){
         $errors['name'] = "Please enter your pets name";
@@ -51,6 +57,82 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
         $petDetails['Number'] = $number;
     }
     
+    //process the story
+    $newStory = filter_input(INPUT_POST, 'newStory', FILTER_VALIDATE_BOOLEAN);
+    $existingStory = filter_input(INPUT_POST, 'existingStory', FILTER_VALIDATE_BOOLEAN);
+    
+    if($newStory){
+        $storyName = filter_input(INPUT_POST, 'storyName', FILTER_SANITIZE_STRING);
+    } elseif($existingStory){
+        $storiesSQL = "SELECT * FROM cms_stories WHERE CharityID = (SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}');";
+        $storiesResult = mysql_query($storiesSQL);
+        $options = array();
+        while($row = mysql_fetch_assoc($storiesResult)){
+            $options[] = $row['StoryID'];
+        }
+        $storyID = filter_input(INPUT_POST, 'county', FILTER_VALIDATE_INT, $options);
+        if(!$storyID){
+            $errors['story'] = "Please choose a valid story";
+        }
+    } //else not using story
+    
+    $allowedTypes = array(
+        "image/gif",
+        "image/jpeg",
+        "image/jpg",
+        "image/pjpeg",
+        "image/x-png",
+        "image/png"
+    );
+    if($_FILES['img1']['size'] <= 0){
+        $errors['img1'] = "Image 1 is required";
+    } elseif($_FILES['img1']['error'] > 0){
+        //there is an error
+        $errCode = $_FILES['img1']['error'];
+        if($errCode == 1 || $errCode == 2){
+            $errors['img1'] = "The file uploaded for Image 1 is too large.";
+        } elseif($errCode == 3){
+            $errors['img1'] = "There was an error uploading Image 1";
+        } elseif ($errCode == 4){
+            $errors['img1'] = "No file was supplied for Image 1";
+        } elseif ($errCode == 5 || $errCode == 6 || $errCode == 7){
+            $errors['img1'] = "An internal error occured while uploading Image 1";
+        }
+    } elseif(!in_array($_FILES['img1']['type'], $allowedTypes)){
+        //file type not allowed
+        $errors['img1'] = "Incorrect file type for Image 1.";
+    } elseif($_FILES['img1']['size'] > 1048576){ //file over 1MB
+        //file too big
+        $errors['img1'] = "Image 1 must be under 1MB";
+    } 
+    
+    $hasImg2 = false;
+    
+    if($_FILES['img2']['size'] > 0){
+        $hasImg2 = true;
+    
+        if($_FILES['img2']['error'] > 0){
+            //there is an error
+            $errCode = $_FILES['img2']['error'];
+            if($errCode == 1 || $errCode == 2){
+                $errors['img2'] = "The file uploaded for Image 2 is too large.";
+            } elseif($errCode == 3){
+                $errors['img2'] = "There was an error uploading Image 2";
+            } elseif ($errCode == 4){
+                $errors['img2'] = "No file was supplied for Image 2";
+            } elseif ($errCode == 5 || $errCode == 6 || $errCode == 7){
+                $errors['img2'] = "An internal error occured while uploading Image 2";
+            }
+        } elseif(!in_array($_FILES['img2']['type'], $allowedTypes)){
+            //file type not allowed
+            $errors['img2'] = "Incorrect file type for Image 2.";
+        } elseif($_FILES['img2']['size'] > 1048576){ //file over 1MB
+            //file too big
+            $errors['img2'] = "Image 2 must be under 1MB";
+        }
+    
+    }
+    
     if(count($errors) > 0){
         output_form($errors, $petDetails);
     } else {
@@ -58,8 +140,76 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
                 . "VALUES((SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}'),"
                 . "{$_SESSION['userID']}, NOW(), '{$petDetails['LastSeen']}', '{$petDetails['Name']}', '{$petDetails['Description']}', '{$petDetails['ContactName']}', '{$petDetails['Number']}', '{$petDetails['Email']}', '{$petDetails['Details']}', 1);";
         
-        $insertResult = mysql_query($insertSQL);
+        //TODO Uncomment $insertResult = mysql_query($insertSQL);
+        $insertID = mysql_insert_id();
+     //attempt to store the file
+        $path = $_FILES['img1']['name'];
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        $filename = $insertID . "_a." . $ext;
+        $file = file_get_contents($_FILES['img1']['tmp_name']);
+        file_put_contents("C:\wamp\www\\3rdyearproj\images\lostAndFound\\" . $filename, $file);
+        //move_uploaded_file seems to create the file, put doesn't moce the contents
+        //move_uploaded_file($_FILES['img1']['tmp_name'], "C:\wamp\www\\3rdyearproj\images\lostAndFound\\" . $filename);
+        $imgSQL = "UPDATE cms_lostfounds SET Image1 = '{$filename}'";
+        $petDetails['Image1'] = $filename;
+        if($hasImg2){
+            $path = $_FILES['img2']['name'];
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
+            $filename = $insertID . "_b." . $ext;
+            $file = file_get_contents($_FILES['img2']['tmp_name']);
+            file_put_contents("C:\wamp\www\\3rdyearproj\images\lostAndFound\\" . $filename, $file);
+            $imgSQL .= ", Image2 = '{$filename}'";
+        }
+        $imgSQL .= " WHERE LostFoundID = {$insertID};";
+        $imgResult = true;//TODO uncomment $imgResult = mysql_query($imgSQL);
+        $petDetails['Image2'] = $filename;
+        if($imgResult){
+            //output success
+            ?>
+<!-- Begin page content -->
+      <div class="container">
+        <div class="page-header">
+          <h1>Submit Lost Animal</h1>
+        </div>
+          <div class="col-md-9">
+        <p class="lead">Your lost animal has been added to our database.</p>
+        <hr />
+        
+        <div class="well">
+            <img class="img-circle" data-src="holder.js/140x140" alt="140x140" style="width: 140px; height: 140px;" src="/images/lostAndFound/<?=$petDetails['Image1']?>" />
+              <h2>
+            <?=$petDetails['Name']?>
+            </h2>
+            <?php
+                $date = date_parse_from_format("Y-m-d H:i:s", $petDetails['LastSeen']);
+                $time = mktime($date['hour'], $date['minute'], $date['second'], $date['month'], $date['day'], $date['year']);
+                $petDetails['LastSeen'] = date("d/m/Y H:i", $time);
+            ?>
+            Last Seen: <?=$petDetails['LastSeen']?>
+            <p>
+                Description:<br />
+                <?=$petDetails['Description']?>
+            </p>
+            Contact Name: <?=$petDetails['ContactName']?> <br />
+            Contact Number: <?=$petDetails['Number']?><br />
+            Contact Email: <?=$petDetails['Email']?>
+            <p>
+                Details:<br />
+                <?=$petDetails['Details']?>
+            </p>
+            <?php
+                if($hasImg2){
+                    echo '<img class="img-circle" data-src="holder.js/140x140" alt="140x140" style="width: 140px; height: 140px;" src="/images/lostAndFound/' . $petDetails['Image2'] . '" />';
+                }
+            ?>
+
+        </div>
+        
+          </div> <!-- /.col-md-9 -->
+            <?php
+        }
     }
+    
     
 } else {
     output_form($errors, $petDetails);
@@ -74,7 +224,7 @@ function output_form(&$errors, &$petDetails){
           <h1>Submit Lost Animal</h1>
         </div>
           <div class="col-md-9">
-        <p class="lead">You can use the form below to file your chicken as missing</p>
+        <p class="lead">You can use the form below to file your animal as missing</p>
         <hr />
         <?php
         if(count($errors) > 0){
@@ -96,7 +246,14 @@ function output_form(&$errors, &$petDetails){
               <input name="name" id="name" type="text" class="form-control" autofocus required value="<?=isset($petDetails['Name']) ? $petDetails['Name'] : ''?>">
               
               <label for="lastSeen">Last Seen</label>
-              <input placeholder="dd/mm/yyyy HH:MM" name="lastSeen" id="lastSeen" type="datetime-local" class="form-control" required value="<?=isset($petDetails['lastSeen']) ? $petDetails['lastSeen'] : ''?>">
+              <?php
+                if(isset($petDetails['LastSeen'])){
+                    $date = date_parse_from_format("Y-m-d H:i:s", $petDetails['LastSeen']);
+                    $time = mktime($date['hour'], $date['minute'], $date['second'], $date['month'], $date['day'], $date['year']);
+                    $petDetails['LastSeen'] = date("d/m/Y H:i", $time);
+                }
+              ?>
+              <input placeholder="dd/mm/yyyy HH:MM" name="lastSeen" id="lastSeen" type="text" class="form-control" required value="<?=isset($petDetails['LastSeen']) ? $petDetails['LastSeen'] : ''?>">
               
               <label for="description">Description</label>
               <textarea name="description" id="description" class="form-control" required><?=isset($petDetails['Description']) ? $petDetails['Description'] : ''?> </textarea>
@@ -114,10 +271,61 @@ function output_form(&$errors, &$petDetails){
               <textarea name="details" id="details" class="form-control" required><?=isset($petDetails['Details']) ? $petDetails['Details'] : ''?></textarea>
               
               <label for="img1">Image 1</label>
-              <input name="img1" id="img1" class="form-control" type="file" />
+              <input name="img1" id="img1" class="form-control" type="file" accept="image/*" required />
               
               <label for="img2">Image 2</label>
-              <input name="img2" id="img2" class="form-control" type="file" />
+              <input name="img2" id="img2" class="form-control" type="file" accept="image/*" />
+              
+              <br />
+              
+            <script>
+                function story(type){
+                    if(type === 0){ //add to existing
+                        if(document.getElementById("existingStory").checked){
+                            document.getElementById("newStory").checked = false;
+                        }
+                        <?php
+                            $storiesSQL = "SELECT * FROM cms_stories WHERE CharityID = (SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}');";
+                            $storiesResult = mysql_query($storiesSQL);
+                            $options = "";
+                            while($row = mysql_fetch_assoc($storiesResult)){
+                                $options .= "<option value=\"{$row['StoryID']}\">{$row['title']}</option>";
+                            }
+                            echo "var options = '{$options}';";
+                        ?>
+                        var innerHTML = '<div class="dropdown"><select name="existingStoryID" id="existingStoryID" class="form-control" required>' + options + '</select></div>';
+                        document.getElementById("storyEdit").innerHTML = innerHTML;
+                    } else{ //type is 1 - add to new
+                        if(document.getElementById("newStory").checked){
+                            document.getElementById("existingStory").checked = false;
+                        }
+                        document.getElementById("storyEdit").innerHTML = '<label for="storyName">Story Name</label><input type="text" name="storyName" id="storyName" class="form-control" required />';
+                    }
+                    
+                    if(!document.getElementById("existingStory").checked && !document.getElementById("newStory").checked){ //neither boxes checked
+                        document.getElementById("storyEdit").innerHTML = '';
+                    }
+                }    
+            </script>
+              
+              <div class="panel panel-default">
+                  <div class="panel-heading">Optional</div>
+                  <div class="panel-body">
+                    <span class="pull-left">
+                      <label for="existingStory">Add to existing story</label>
+                      <input type="checkbox" name="existingStory" id="existingStory" onChange="story(0)"/>
+                    </span>
+
+                    <span class="pull-right">
+                      <label for="newStory">Create new story</label>
+                      <input type="checkbox" name="newStory" id="newStory"  onChange="story(1)"/>
+                    </span>
+
+                    <div id="storyEdit" class="clear-both">
+
+                    </div>
+                  </div>
+              </div>
               
               <br/>
               
