@@ -161,20 +161,21 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
             $imgSQL .= ", Image2 = '{$filename}'";
         }
         $imgSQL .= " WHERE LostFoundID = {$lfInsertID};";
-        $imgResult = true;//TODO uncomment $imgResult = mysql_query($imgSQL);
+        $imgResult = mysql_query($imgSQL);
         $petDetails['Image2'] = $filename;
         if($imgResult){
             //output success
         
         //INSERT INTO CMS_Content
-        $insertContentSQL = "INSERT INTO CMS_Content VALUES ('CMS_LostFounds', '" . $lfInsertID . "')";
+        $insertContentSQL = "INSERT INTO CMS_Content VALUES (null, 'CMS_LostFounds', '" . $lfInsertID . "')";
         $insertContentResult = mysql_query($insertContentSQL);
+        echo mysql_error();
         //GET ContentINsertID
         $insertContentID = mysql_insert_id();
         if($newStory || $existingStory){
             if($newStory){
                 //INSERT INTO CMS_STORIES
-                $insertStorySQL = "INSERT INTO CMS_Stories VALUES ($storyName, '" . $info['CharityID'] . "')";
+                $insertStorySQL = "INSERT INTO CMS_Stories VALUES (null, '{$storyName}', '" . $info['CharityID'] . "')";
                 $insertStoryResult = mysql_query($insertStorySQL);
                 //GET STORYINSERTID
                 $insertStoryID = mysql_insert_id();
@@ -183,8 +184,9 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
                 $insertStoryID = $storyID;
             }
             //INSERT INTO CMS_StoryCONTENT
-            $insertStoryContentSQL = "INSERT INTO CMS_StoryContent VALUES ('". $insertStoryID . "', '" . $insertContentID . "')";
+            $insertStoryContentSQL = "INSERT INTO CMS_StoryContent VALUES (null, '". $insertStoryID . "', '" . $insertContentID . "')";
             $insertStoryContentResult = mysql_query($insertStoryContentSQL);
+            echo mysql_error();
         }
         
         ?>
