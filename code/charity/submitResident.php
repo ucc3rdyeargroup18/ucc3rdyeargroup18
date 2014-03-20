@@ -53,6 +53,51 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
                 . "{$_SESSION['userID']}, NOW(), '{$petDetails['Name']}', '{$petDetails['Description']}', '{$petDetails['ContactName']}', '{$petDetails['Number']}', '{$petDetails['Email']}', '{$petDetails['Location']}', 0);";
         
         $insertResult = mysql_query($insertSQL);
+        $petInsertID = mysql_insert_id();
+     //attempt to store the file
+        $path = $_FILES['img1']['name'];
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        $filename = $petInsertID . "_a." . $ext;
+        $file = file_get_contents($_FILES['img1']['tmp_name']);
+        file_put_contents("C:\wamp\www\\3rdyearproj\images\pets\\" . $filename, $file);
+        //move_uploaded_file seems to create the file, put doesn't moce the contents
+        //move_uploaded_file($_FILES['img1']['tmp_name'], "C:\wamp\www\\3rdyearproj\images\lostAndFound\\" . $filename);
+        $imgSQL = "UPDATE cms_lostfounds SET Image1 = '{$filename}'";
+        $petDetails['Image1'] = $filename;
+        if($hasImg2){
+            $path = $_FILES['img2']['name'];
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
+            $filename = $petInsertID . "_b." . $ext;
+            $file = file_get_contents($_FILES['img2']['tmp_name']);
+            file_put_contents("C:\wamp\www\\3rdyearproj\images\pets\\" . $filename, $file);
+            $imgSQL .= ", Image2 = '{$filename}'";
+        }
+        $imgSQL .= " WHERE PetID = {$petInsertID};";
+        $imgResult = mysql_query($imgSQL);
+        $petDetails['Image2'] = $filename;
+        if($imgResult){
+            //output success
+        
+        //INSERT INTO CMS_Content
+        $insertContentSQL = "INSERT INTO CMS_Content VALUES (null, 'CMS_Pets', '" . $petInsertID . "')";
+        $insertContentResult = mysql_query($insertContentSQL);
+        echo mysql_error();
+        //GET ContentINsertID
+        $insertContentID = mysql_insert_id();
+        if($newStory || $existingStory){
+            if($newStory){
+                //INSERT INTO CMS_STORIES
+                $insertStorySQL = "INSERT INTO CMS_Stories VALUES (null, '{$storyName}', '" . $info['CharityID'] . "')";
+                $insertStoryResult = mysql_query($insertStorySQL);
+                //GET STORYINSERTID
+                $insertStoryID = mysql_insert_id();
+            } else {
+                //GETSTORYID FROM DDL VALUE
+                $insertStoryID = $storyID;
+            }
+            //INSERT INTO CMS_StoryCONTENT
+            $insertStoryContentSQL = "INSERT INTO CMS_StoryContent VALUES (null, '". $insertStoryID . "', '" . $insertContentID . "')";
+            $insertStoryContentResult = mysql_query($insertStoryContentSQL);
     }
     
 } else {
@@ -109,6 +154,55 @@ function output_form(&$errors, &$petDetails){
               
               <label for="img2">Image 2</label>
               <input name="img2" id="img2" class="form-control" type="file" />
+              
+              <script>
+                function story(type){
+                    if(type === 0){ //add to existing
+                        if(document.getElementById("existingStory").checked){
+                            document.getElementById("newStory").checked = false;
+                        }
+                        <?php
+                            $storiesSQL = "SELECT * FROM cms_stories WHERE CharityID = (SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}');";
+                            $storiesResult = mysql_query($storiesSQL);
+                            $options = "";
+                            while($row = mysql_fetch_assoc($storiesResult)){
+                                $options .= "<option value=\"{$row['StoryID']}\">{$row['title']}</option>";
+                            }
+                            echo "var options = '{$options}';";
+                        ?>
+                        var innerHTML = '<div class="dropdown"><select name="existingStoryID" id="existingStoryID" class="form-control" required>' + options + '</select></div>';
+                        document.getElementById("storyEdit").innerHTML = innerHTML;
+                    } else{ //type is 1 - add to new
+                        if(document.getElementById("newStory").checked){
+                            document.getElementById("existingStory").checked = false;
+                        }
+                        document.getElementById("storyEdit").innerHTML = '<label for="storyName">Story Name</label><input type="text" name="storyName" id="storyName" class="form-control" required />';
+                    }
+                    
+                    if(!document.getElementById("existingStory").checked && !document.getElementById("newStory").checked){ //neither boxes checked
+                        document.getElementById("storyEdit").innerHTML = '';
+                    }
+                }    
+            </script>
+              
+              <div class="panel panel-default">
+                  <div class="panel-heading">Optional</div>
+                  <div class="panel-body">
+                    <span class="pull-left">
+                      <label for="existingStory">Add to existing story</label>
+                      <input type="checkbox" name="existingStory" id="existingStory" onChange="story(0)"/>
+                    </span>
+
+                    <span class="pull-right">
+                      <label for="newStory">Create new story</label>
+                      <input type="checkbox" name="newStory" id="newStory"  onChange="story(1)"/>
+                    </span>
+
+                    <div id="storyEdit" class="clear-both">
+
+                    </div>
+                  </div>
+              </div>
               
               <br/>
               
