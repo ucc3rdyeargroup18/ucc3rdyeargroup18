@@ -20,11 +20,16 @@ if(isset($_GET['anml'])){
       <!-- Begin page content -->
       <div class="container">
         <div class="page-header">
-          <h1>Up for Adoption</h1>
+          <?php
+                $getHeaderSQL = "SELECT CustomTitle FROM CMS_CharityPages WHERE CharityID = {$info['CharityID']} AND PageID = {$info['PageID']}";
+                $result = mysql_query($getHeaderSQL);
+                $header = mysql_result($result, 0);
+                echo '<h1>' . $header . '</h1>';
+            ?>
         </div>
           <div class="col-md-9">
-        <p class="lead">Here are some animals we rescued that are free to a good home</p>
-        <p>If you are interested in any of them, see the contact us in any of the ways shown</p>
+        <p class="lead">Below is a list of animals are available for adoption.</p>
+        <p>If you have an animal available for adoption<a href="submitAdoptable">here</a></p>
         <hr />
         <div class="container marketing">
 
@@ -58,7 +63,7 @@ if(isset($_GET['anml'])){
               echo $animal['Description'];
               echo '</br>';
               echo 'Location: ' . $animal['Location'];
-              echo '<p><a class="btn btn-default" href="lostAndFound/';
+              echo '<p><a class="btn btn-default" href="foundDetails?foundID=' . $animal['ID'];
               //echo $animal['animalPermaID'];
               echo '" role="button">View details »</a></p>
             </div><!-- /.col-lg-4 -->';
