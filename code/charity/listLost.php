@@ -63,7 +63,7 @@ if(isset($_GET['anml'])){
              $animal['LastSeen'] = date("d/m/Y @ H:i", $time);
               echo "Last Seen: " . $animal['LastSeen'] . '<br />';
               echo $animal['Details'];
-              echo '<p><a class="btn btn-default" href="lostAndFound/';
+              echo '<p><a class="btn btn-default" href="lostDetails?lostID=' . $animal['LostFountID'];
               //echo $animal['animalPermaID'];
               echo '" role="button">View details Â»</a></p>
             </div><!-- /.col-lg-4 -->';
