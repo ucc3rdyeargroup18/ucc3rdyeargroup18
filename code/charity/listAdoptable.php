@@ -29,7 +29,7 @@ if(isset($_GET['anml'])){
         </div>
           <div class="col-md-9">
         <p class="lead">Below is a list of animals are available for adoption.</p>
-        <p>If you have an animal available for adoption<a href="submitAdoptable">here</a></p>
+        <p>If you have an animal available for adoption <a href="submitAdoptable">here</a></p>
         <hr />
         <div class="container marketing">
 
@@ -38,7 +38,7 @@ if(isset($_GET['anml'])){
           <?php 
           $count = 0;
 
-        $getAdoptableSQL = "SELECT Name, Description, Image1, Location, ID FROM CMS_Pets WHERE CharityID = {$info['CharityID']} AND isAdoptable = 1 ORDER BY Name";
+        $getAdoptableSQL = "SELECT Name, Description, Image1, Location, PetID FROM CMS_Pets WHERE CharityID = {$info['CharityID']} AND isAdoptable = 1 ORDER BY Name";
         $result = mysql_query($getAdoptableSQL);
         while($row = mysql_fetch_assoc($result))
         {
@@ -51,11 +51,8 @@ if(isset($_GET['anml'])){
                 echo '<div class="row lost-found-row">';
             }
             echo '<div class="col-lg-4">
-              <img class="img-circle" data-src="holder.js/140x140" alt="140x140" style="width: 140px; height: 140px;" src="/';
-            //TODO change image src to BLOB ($animal['Image1'])
-            //echo $animal['Image1']; //display the image of the missing animal
-            //echo data_uri($animal['Image1'], 'image/jpeg');
-            echo 'images/clucker.jpg';
+              <img class="img-circle" data-src="holder.js/140x140" alt="140x140" style="width: 140px; height: 140px;" src="/images/pets/';
+            echo $animal['Image1'];
             echo '">
               <h2>';
             echo $animal['Name']; //print the animals name
@@ -63,7 +60,7 @@ if(isset($_GET['anml'])){
               echo $animal['Description'];
               echo '</br>';
               echo 'Location: ' . $animal['Location'];
-              echo '<p><a class="btn btn-default" href="adoptableDetails?adoptableID=' . $animal['ID'];
+              echo '<p><a class="btn btn-default" href="adoptableDetails?adoptableID=' . $animal['PetID'];
               //echo $animal['animalPermaID'];
               echo '" role="button">View details »</a></p>
             </div><!-- /.col-lg-4 -->';
