@@ -29,8 +29,8 @@ if(isset($_GET['anml'])){
         </div>
           <div class="col-md-9">
         <p class="lead">Below is a list of animals that have been found recently.</p>
-        <p>If you have found an animal, please report it on our <a href="submitFound">here</a></p>
-        <p>If you have lost an animal, please report it on our <a href="submitLost">here</a></p>
+        <p>If you have found an animal, please report it <a href="submitFound">here</a></p>
+        <p>If you have lost an animal, please report it <a href="submitLost">here</a></p>
         <hr />
         <div class="container marketing">
 
@@ -65,7 +65,7 @@ if(isset($_GET['anml'])){
               echo $animal['Details'];
               echo '<p><a class="btn btn-default" href="foundDetails?foundID=' . $animal['LostFoundID'];
               //echo $animal['animalPermaID'];
-              echo '" role="button">View details Â»</a></p>
+              echo '" role="button">View details »</a></p>
             </div><!-- /.col-lg-4 -->';
               if($count%2 == 1){
                   echo '</div>';
