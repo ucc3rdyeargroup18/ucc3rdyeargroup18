@@ -20,11 +20,11 @@ if(isset($_GET['anml'])){
       <!-- Begin page content -->
       <div class="container">
         <div class="page-header">
-          <h1>Lost Chickens</h1>
+          <h1>Lost Animals</h1>
         </div>
           <div class="col-md-9">
-        <p class="lead">Below is a list of chickens currently missing from their coops</p>
-        <p>If you have lost or found a hen, please report it on our <a href="submitLost">Lost and Found</a> page</p>
+        <p class="lead">Below is a list of animals currently missing.</p>
+        <p>If you have lost or found an animal, please report it on our <a href="submitLost">here</a></p>
         <hr />
         <div class="container marketing">
 
@@ -32,17 +32,6 @@ if(isset($_GET['anml'])){
       <!--div class="row"-->
           <?php 
           $count = 0;
-          //XXX temporary array to test foreach
-//          $lostAndFound = array(
-//              array(
-//                  'animalPermaID' => 'Clucker',
-//                  'img' => 'images/clucker.jpg',
-//                  'animalName' => 'Clucker',
-//                  'animalInfo' => '<p>Clucker is missing from his home in Clonakilty. There are fears he may have been an imposter</p>'
-//              )
-//          );
-          //$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];$lostAndFound[] = $lostAndFound[0];
-          //TODO update to use new databse
           
         $getLostPetsSQL = "SELECT Name, Details, Image1, LostFoundID, LastSeen FROM CMS_LostFounds WHERE CharityID = {$info['CharityID']} AND isLost = 1 ORDER BY CreatedOn DESC";
         $result = mysql_query($getLostPetsSQL);
