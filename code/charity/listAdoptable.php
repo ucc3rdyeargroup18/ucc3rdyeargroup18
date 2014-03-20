@@ -63,7 +63,7 @@ if(isset($_GET['anml'])){
               echo $animal['Description'];
               echo '</br>';
               echo 'Location: ' . $animal['Location'];
-              echo '<p><a class="btn btn-default" href="foundDetails?foundID=' . $animal['ID'];
+              echo '<p><a class="btn btn-default" href="adoptableDetails?adoptableID=' . $animal['ID'];
               //echo $animal['animalPermaID'];
               echo '" role="button">View details »</a></p>
             </div><!-- /.col-lg-4 -->';
