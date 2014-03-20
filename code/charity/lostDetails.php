@@ -17,11 +17,12 @@ if(isset($_GET['anml'])){
 
 ?>
 <?php
-    $getLostSQL = "SELECT cms_lostfound.Name, LastSeen, Description, Contact, Number1, Email, Details, Image1, Image2, CreatedOn, EditedOn, Concat(Creators.FirstName, ' ', Creators.LastName) AS Creator, Concat(Editors.FirstName , ' ', Editors.LastName) AS Editor "
-            . "FROM CMS_LostFound, (SELECT UserID, FirstName, LastName FROM CMS_Users) Creators, (SELECT UserID, FirstName, LastName FROM CMS_Users) Editors "
+    $getLostSQL = "SELECT cms_lostfounds.Name, LastSeen, Description, Contact, Number1, Email, Details, Image1, Image2, CreatedOn, EditedOn, Concat(Creators.FirstName, ' ', Creators.LastName) AS Creator, Concat(Editors.FirstName , ' ', Editors.LastName) AS Editor "
+            . "FROM CMS_LostFounds, (SELECT UserID, FirstName, LastName FROM CMS_Users) Creators, (SELECT UserID, FirstName, LastName FROM CMS_Users) Editors "
             . "WHERE LostFoundID = {$_GET['lostID']} AND Creators.UserID = CreatorID AND Editors.UserID = EditorID";
     $result = mysql_query($getLostSQL);
     $lost = mysql_fetch_assoc($result);
+    echo $getLostSQL;
     echo '<div class="container">';
         echo '<div class="page-header">';
             echo '<h1>' . $lost['Name'] . '</h1>';
@@ -38,18 +39,20 @@ if(isset($_GET['anml'])){
             echo '<div class="col-md-12 container marketing">';
             if($lost['Image2'] != null)
             {
-                echo '<img class="img-circle pull-left" src="/images/losts/'. $lost['Image1'] . '" style="max-width:40%;">';
-                echo '<img class="img-circle pull-right" src="/images/losts/'. $lost['Image2'] . '" style="max-width:40%;">';
+                echo '<img class="pull-left" src="/images/lostandfound/'. $lost['Image1'] . '" style="max-width:40%;">';
+                echo '<img class="pull-right" src="/images/lostandfound/'. $lost['Image2'] . '" style="max-width:40%;">';
             } 
             else
             {
-                echo '<img class="img-circle center" src="/images/losts/'. $lost['Image1'] . '" style="max-width:100%; max-height: 30em;">';  
+                echo '<img class="center" src="/images/lostandfound/'. $lost['Image1'] . '" style="max-width:100%; max-height: 30em;">';  
             }
                 echo '<br class="clear-both" /><hr class="clear-both">';
                 echo '<p class="well clear-both">';
+                    echo '<b>Description</b><br />';
                     echo $lost['Description'];
                 echo '</p>';
                 echo '<p class="well clear-both">';
+                    echo '<b>Details</b><br />';
                     echo $lost['Details'];
                 echo '</p>';
                 echo '<p>';
