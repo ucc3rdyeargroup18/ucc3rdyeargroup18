@@ -13,6 +13,17 @@
     $charityIDSQL = "SELECT CharityID FROM cms_events WHERE EventID = {$eventID};";
     $charityIDResult = mysql_query($charityIDSQL);
     $info['CharityID'] = mysql_result($charityIDResult, 0);
+    $checkSQL = "SELECT CharityID FROM cms_charities WHERE DomainName = '{$domain}'";
+    $checkResult = mysql_query($checkSQL);
+    if($info['CharityID'] != mysql_result($checkResult, 0)){
+        echo '<div class="jumbotron">
+                <div class="container">
+                  <h1>Authorisation Failed</h1>
+                  <p>You are not authorised to manage this event</p>';
+                echo '</div>
+              </div>';
+                die();
+    }
     //TODO check if right charity for this event / if user is allowed edit
     if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form has been submitted, process it
         $eventDetails['Name'] = trim(filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING));
