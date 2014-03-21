@@ -123,6 +123,7 @@ if(mysql_num_rows($authResult) != 1){//the user is not authorised for this chari
         pages[0] = "editUserDetails.php";
         pages[1] = "managePosts";
         pages[2] = "userPageManagement.php";
+        pages[3] = "changePassword.php";
         var current = -1;
         function content(id){
             current = id;
@@ -203,13 +204,14 @@ if(mysql_num_rows($authResult) != 1){//the user is not authorised for this chari
                                     document.getElementById("cmsContent").innerHTML="The requested file was not found";
                                     return false;
                             } else{
+                                    alert(ASO.responseText);
                                     document.getElementById("cmsContent").innerHTML+="An Error occurred while processing your request.";
                                     //document.getElementById("submitButton").className = "btn btn-danger";
                                     return false;
                             }
                     }
             };
-            ASO.open("POST", "/cms/" + pages[current], false);
+            ASO.open("POST", "/user/" + pages[current], false);
             ASO.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             ASO.send(params);
             return false;
@@ -313,6 +315,7 @@ if(mysql_num_rows($authResult) != 1){//the user is not authorised for this chari
           <ul class="nav nav-sidebar"><!-- pages all charities will need -->
             <li class="navbar-section-header">Manage Site</li>
             <li id="cmsItem0"><a href="javascript:content(0);">Edit User Details</a></li>
+            <li id="cmsItem3"><a href="javascript:content(3);">Change Your Password</a></li>
             <li id="cmsItem1"><a href="javascript:content(1);">Manage Your Posts</a></li>
             <li id="cmsItem2"><a href="javascript:content(2);">Your Pages</a></li>
           </ul>
