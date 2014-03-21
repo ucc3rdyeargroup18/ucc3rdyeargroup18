@@ -55,7 +55,13 @@ function outputPageForm(&$errors, &$content, $success = false){
             <div class="jumbotron">
                 <div class="container">
                   <h1>Edit Charity Pages</h1>
-                  <p>Select your charity's below.</p>
+                  <p>
+                      Select your charity's below.<br />
+                      <small class="text-muted">
+                          Selected pages appear in the navigation bar at the top of your site.<br />
+                          Unselected pages will not appear in the nav-bar, but can still be access via links on other pages.
+                      </small>
+                  </p>
 
                 </div>
               </div>
