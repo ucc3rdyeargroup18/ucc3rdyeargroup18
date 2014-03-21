@@ -257,10 +257,10 @@ function output_form(&$errors, &$petDetails){
               <textarea name="location" id="location" class="form-control" required><?=isset($petDetails['Location']) ? $petDetails['Location'] : ''?></textarea>
               
               <label for="img1">Image 1</label>
-              <input name="img1" id="img1" class="form-control" type="file" />
+              <input name="img1" id="img1" class="form-control" type="file" accept="image/*" required />
               
               <label for="img2">Image 2</label>
-              <input name="img2" id="img2" class="form-control" type="file" />
+              <input name="img2" id="img2" class="form-control" type="file" accept="image/*" />
               
               <script>
                 function story(type){
