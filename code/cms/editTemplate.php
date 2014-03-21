@@ -28,9 +28,7 @@
         } else {
             $colours['Color3'] = str_replace('#', '', $colour3);
         }
-        
-        //TODO Handle File Upload
-        
+                
         if(count($errors) > 0){
             outputTemplateForm($errors, $colours);
         } else {
@@ -109,10 +107,6 @@ function outputTemplateForm(&$errors, &$colours, $success = false){
         <input name="textColour" id="textColour" type="text" value="#<?=$colours['Color3']?>" class="form-control" required/>
         <span class="input-group-addon"><i></i></span>
     </div>
-
-<label for="file">Upload your logo: </label>
-
-<input type="file" name="file" id="file"  /> 
 <br />
 
 
@@ -129,7 +123,6 @@ function outputTemplateForm(&$errors, &$colours, $success = false){
     // Check for the various File API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       // Great success! All the File APIs are supported.
-      alert("yes");
     } else {
       alert('The File APIs are not fully supported in this browser.');
     }    
