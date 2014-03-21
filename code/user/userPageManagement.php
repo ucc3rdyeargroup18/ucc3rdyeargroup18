@@ -51,7 +51,52 @@ session_start();
           echo '<td>';
           echo $page['Pending'] == '1' ? 'Pending' : 'Granted';
           echo '</td>';
-          echo '<td><a class="btn btn-default" href="javascript:;" onclick="removeAccess(' . $page["ID"] . ')" role="button">Remove Access</a></td>';          
+          echo '<td><a id="remove' . $page["ID"] . '" class="btn btn-default" href="javascript:;" onclick="removeAccess(' . $page["ID"] . ')" role="button">Remove Access</a></td>';          
           echo '</tr>';
     }
     echo '</tbody></table>';
+
+    ?>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        Request Page Access
+    </div>
+    <div class="panel-body">
+        <form>
+            <div class="col-md-4 dropdown">
+                <label for="selectCharity">Select Charity:</label>
+                     <select name="selectCharity" id="selectCharity" class="form-control" required>
+
+
+                    <?php
+                    $charitiesSQL = "SELECT * FROM cms_charities WHERE CharityId > 0;";
+                    $charitiesResult = mysql_query($charitiesSQL);
+                    while($row = mysql_fetch_assoc($charitiesResult)){
+                        echo '<option value="' . $row['CharityID'] . '">' . $row['Name'] . '</option>';
+                    }
+                    ?>
+                   </select> 
+               </div>
+            <div class="col-md-4 dropdown">
+                <label for="selectPage">Select Page:</label>
+                     <select name="selectPage" id="selectPage" class="form-control" required>
+
+
+                    <?php
+                    $pagesSQL = "SELECT * FROM cms_pages WHERE PageID = 10 OR PageID = 11 OR PageID = 12;";
+                    $pagesResult = mysql_query($pagesSQL);
+                    while($row = mysql_fetch_assoc($pagesResult)){
+                        echo '<option value="' . $row['PageID'] . '">' . $row['Name'] . '</option>';
+                    }
+                    ?>
+                   </select> 
+               </div>
+            <div class="col-md-4">
+                <label for="requestAccess">Send Request:</label><br />
+                <a id="requestAccess" class="btn btn-default" href="javascript:;" onclick="requestAccess()" role="button">Request Access</a>
+            </div>
+        </form>
+    </div>
+    
+</div>
