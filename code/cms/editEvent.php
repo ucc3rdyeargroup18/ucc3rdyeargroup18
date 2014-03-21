@@ -10,6 +10,9 @@
     $errors = array();
     $eventDetails = array();
     $eventID = filter_input(INPUT_GET, 'eventID', FILTER_VALIDATE_INT);
+    $charityIDSQL = "SELECT CharityID FROM cms_events WHERE EventID = {$eventID};";
+    $charityIDResult = mysql_query($charityIDSQL);
+    $info['CharityID'] = mysql_result($charityIDResult, 0);
     //TODO check if right charity for this event / if user is allowed edit
     if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form has been submitted, process it
         $eventDetails['Name'] = trim(filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING));
@@ -70,7 +73,7 @@
     if($newStory){
         $storyName = filter_input(INPUT_POST, 'storyName', FILTER_SANITIZE_STRING);
     } elseif($existingStory){
-        $storiesSQL = "SELECT * FROM cms_stories WHERE CharityID = (SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}');";
+        $storiesSQL = "SELECT * FROM cms_stories WHERE CharityID = {$info['CharityID']};";
         $storiesResult = mysql_query($storiesSQL);
         $options = array();
         while($row = mysql_fetch_assoc($storiesResult)){
@@ -90,6 +93,8 @@
         "image/x-png",
         "image/png"
     );
+    
+    //TODO implement AJAX File Upload
     
     $hasImg1 = false;
     
@@ -114,6 +119,13 @@
         } elseif($_FILES['img1']['size'] > 1048576){ //file over 1MB
             //file too big
             $errors['img1'] = "Image 1 must be under 1MB";
+        } else{
+            $path = $_FILES['img1']['name'];
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
+            $filename = $eventID . "_a." . $ext;
+            $file = file_get_contents($_FILES['img1']['tmp_name']);
+            file_put_contents("C:\wamp\www\\3rdyearproj\images\\events\\" . $filename, $file);
+            $eventDetails['Image1'] = $filename;
         } 
     }
     
@@ -140,6 +152,13 @@
         } elseif($_FILES['img2']['size'] > 1048576){ //file over 1MB
             //file too big
             $errors['img2'] = "Image 2 must be under 1MB";
+        } else {
+            $path = $_FILES['img2']['name'];
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
+            $filename = $eventID . "_b." . $ext;
+            $file = file_get_contents($_FILES['img2']['tmp_name']);
+            file_put_contents("C:\wamp\www\\3rdyearproj\images\\events\\" . $filename, $file);
+            $eventDetails['Image2'] = $filename;
         }
     
     }
@@ -158,10 +177,34 @@
                     . "Contact = '{$eventDetails['Contact']}', "
                     . "Number1 = '{$eventDetails['Number1']}', "
                     . "Email = '{$eventDetails['Email']}', "
-                    . "Location = '{$eventDetails['Location']}' "
-                    . "WHERE EventID = {$eventID};";
+                    . "Location = '{$eventDetails['Location']}'";
+                    
+        $updateSQL .= $hasImg1 ? ", Image1 = '{$eventDetails['Image1']}'" : "";
+        $updateSQL .= $hasImg2 ? ", Image2 = '{$eventDetails['Image2']}'" : "";
+                    
+         $updateSQL .= " WHERE EventID = {$eventID};";
             $updateResult = mysql_query($updateSQL);
             if($updateResult){
+                //INSERT INTO CMS_Content
+                $insertContentSQL = "INSERT INTO CMS_Content VALUES (null, 'CMS_Events', '" . $eventID . "')";
+                $insertContentResult = mysql_query($insertContentSQL);
+                //GET ContentINsertID
+                $insertContentID = mysql_insert_id();
+                if($newStory || $existingStory){
+                    if($newStory){
+                        //INSERT INTO CMS_STORIES
+                        $insertStorySQL = "INSERT INTO CMS_Stories VALUES (null, '{$storyName}', '" . $info['CharityID'] . "')";
+                        $insertStoryResult = mysql_query($insertStorySQL);
+                        //GET STORYINSERTID
+                        $insertStoryID = mysql_insert_id();
+                    } else {
+                        //GETSTORYID FROM DDL VALUE
+                        $insertStoryID = $storyID;
+                    }
+                    //INSERT INTO CMS_StoryCONTENT
+                    $insertStoryContentSQL = "INSERT INTO CMS_StoryContent VALUES (null, '". $insertStoryID . "', '" . $insertContentID . "')";
+                    $insertStoryContentResult = mysql_query($insertStoryContentSQL);
+                }
                 outputCharityForm($errors, $eventDetails, true);
             } else{
                 //TODO Output Error 
@@ -249,41 +292,24 @@
               <label for="location">Location</label>
               <textarea name="location" id="location" class="form-control" required><?=isset($eventDetails['Location']) ? $eventDetails['Location'] : ''?></textarea>
               
-              <label for="img1">Image 1</label>
-              <input name="img1" id="img1" class="form-control" type="file" />
+              <?php
+//              <label for="img1">Image 1</label>
+//              <input name="img1" id="img1" class="form-control" type="file" />
+//              
+//              <label for="img2">Image 2</label>
+//              <input name="img2" id="img2" class="form-control" type="file" />
+                ?>
               
-              <label for="img2">Image 2</label>
-              <input name="img2" id="img2" class="form-control" type="file" />
               
-              <script>
-                function story(type){
-                    if(type === 0){ //add to existing
-                        if(document.getElementById("existingStory").checked){
-                            document.getElementById("newStory").checked = false;
+              <?php
+                        $storiesSQL = "SELECT * FROM cms_stories WHERE CharityID = (SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}');";
+                        $storiesResult = mysql_query($storiesSQL);
+                        $options = "";
+                        while($row = mysql_fetch_assoc($storiesResult)){
+                            $options .= "<option value=\"{$row['StoryID']}\">{$row['title']}</option>";
                         }
-                        <?php
-                            $storiesSQL = "SELECT * FROM cms_stories WHERE CharityID = (SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}');";
-                            $storiesResult = mysql_query($storiesSQL);
-                            $options = "";
-                            while($row = mysql_fetch_assoc($storiesResult)){
-                                $options .= "<option value=\"{$row['StoryID']}\">{$row['title']}</option>";
-                            }
-                            echo "var options = '{$options}';";
-                        ?>
-                        var innerHTML = '<div class="dropdown"><select name="existingStoryID" id="existingStoryID" class="form-control" required>' + options + '</select></div>';
-                        document.getElementById("storyEdit").innerHTML = innerHTML;
-                    } else{ //type is 1 - add to new
-                        if(document.getElementById("newStory").checked){
-                            document.getElementById("existingStory").checked = false;
-                        }
-                        document.getElementById("storyEdit").innerHTML = '<label for="storyName">Story Name</label><input type="text" name="storyName" id="storyName" class="form-control" required />';
-                    }
-                    
-                    if(!document.getElementById("existingStory").checked && !document.getElementById("newStory").checked){ //neither boxes checked
-                        document.getElementById("storyEdit").innerHTML = '';
-                    }
-                }    
-            </script>
+                        echo "<script id=\"scriptOptions\">var options = '{$options}';</script>";
+                    ?>
               
               <div class="panel panel-default">
                   <div class="panel-heading">Optional</div>
