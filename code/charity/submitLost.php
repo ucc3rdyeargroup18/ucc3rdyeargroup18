@@ -70,7 +70,7 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
         while($row = mysql_fetch_assoc($storiesResult)){
             $options[] = $row['StoryID'];
         }
-        $storyID = filter_input(INPUT_POST, 'county', FILTER_VALIDATE_INT, $options);
+        $storyID = filter_input(INPUT_POST, 'existingStoryID', FILTER_VALIDATE_INT, $options);
         if(!$storyID){
             $errors['story'] = "Please choose a valid story";
         }
@@ -136,9 +136,9 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
     if(count($errors) > 0){
         output_form($errors, $petDetails);
     } else {
-        $insertSQL = "INSERT INTO cms_lostfounds (CharityID, CreatorID, CreatedOn, LastSeen, Name, Description, Contact, Number1, Email, Details, isLost)"
+        $insertSQL = "INSERT INTO cms_lostfounds (CharityID, CreatorID, CreatedOn, EditorID, EditedOn, LastSeen, Name, Description, Contact, Number1, Email, Details, isLost)"
                 . "VALUES((SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}'),"
-                . "{$_SESSION['userID']}, NOW(), '{$petDetails['LastSeen']}', '{$petDetails['Name']}', '{$petDetails['Description']}', '{$petDetails['ContactName']}', '{$petDetails['Number']}', '{$petDetails['Email']}', '{$petDetails['Details']}', 1);";
+                . "{$_SESSION['userID']}, NOW(), {$_SESSION['userID']}, NOW(), '{$petDetails['LastSeen']}', '{$petDetails['Name']}', '{$petDetails['Description']}', '{$petDetails['ContactName']}', '{$petDetails['Number']}', '{$petDetails['Email']}', '{$petDetails['Details']}', 1);";
         
         $insertResult = mysql_query($insertSQL);
         $lfInsertID = mysql_insert_id();
@@ -186,7 +186,6 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
             //INSERT INTO CMS_StoryCONTENT
             $insertStoryContentSQL = "INSERT INTO CMS_StoryContent VALUES (null, '". $insertStoryID . "', '" . $insertContentID . "')";
             $insertStoryContentResult = mysql_query($insertStoryContentSQL);
-            echo mysql_error();
         }
         
         ?>
