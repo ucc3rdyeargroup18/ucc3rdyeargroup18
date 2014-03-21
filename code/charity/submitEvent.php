@@ -51,6 +51,82 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
         $eventDetails['Number'] = $number;
     }
     
+    //process the story
+    $newStory = filter_input(INPUT_POST, 'newStory', FILTER_VALIDATE_BOOLEAN);
+    $existingStory = filter_input(INPUT_POST, 'existingStory', FILTER_VALIDATE_BOOLEAN);
+    
+    if($newStory){
+        $storyName = filter_input(INPUT_POST, 'storyName', FILTER_SANITIZE_STRING);
+    } elseif($existingStory){
+        $storiesSQL = "SELECT * FROM cms_stories WHERE CharityID = (SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}');";
+        $storiesResult = mysql_query($storiesSQL);
+        $options = array();
+        while($row = mysql_fetch_assoc($storiesResult)){
+            $options[] = $row['StoryID'];
+        }
+        $storyID = filter_input(INPUT_POST, 'existingStoryID', FILTER_VALIDATE_INT, $options);
+        if(!$storyID){
+            $errors['story'] = "Please choose a valid story";
+        }
+    } //else not using story
+    
+    $allowedTypes = array(
+        "image/gif",
+        "image/jpeg",
+        "image/jpg",
+        "image/pjpeg",
+        "image/x-png",
+        "image/png"
+    );
+    if($_FILES['img1']['size'] <= 0){
+        $errors['img1'] = "Image 1 is required";
+    } elseif($_FILES['img1']['error'] > 0){
+        //there is an error
+        $errCode = $_FILES['img1']['error'];
+        if($errCode == 1 || $errCode == 2){
+            $errors['img1'] = "The file uploaded for Image 1 is too large.";
+        } elseif($errCode == 3){
+            $errors['img1'] = "There was an error uploading Image 1";
+        } elseif ($errCode == 4){
+            $errors['img1'] = "No file was supplied for Image 1";
+        } elseif ($errCode == 5 || $errCode == 6 || $errCode == 7){
+            $errors['img1'] = "An internal error occured while uploading Image 1";
+        }
+    } elseif(!in_array($_FILES['img1']['type'], $allowedTypes)){
+        //file type not allowed
+        $errors['img1'] = "Incorrect file type for Image 1.";
+    } elseif($_FILES['img1']['size'] > 1048576){ //file over 1MB
+        //file too big
+        $errors['img1'] = "Image 1 must be under 1MB";
+    } 
+    
+    $hasImg2 = false;
+    
+    if($_FILES['img2']['size'] > 0){
+        $hasImg2 = true;
+    
+        if($_FILES['img2']['error'] > 0){
+            //there is an error
+            $errCode = $_FILES['img2']['error'];
+            if($errCode == 1 || $errCode == 2){
+                $errors['img2'] = "The file uploaded for Image 2 is too large.";
+            } elseif($errCode == 3){
+                $errors['img2'] = "There was an error uploading Image 2";
+            } elseif ($errCode == 4){
+                $errors['img2'] = "No file was supplied for Image 2";
+            } elseif ($errCode == 5 || $errCode == 6 || $errCode == 7){
+                $errors['img2'] = "An internal error occured while uploading Image 2";
+            }
+        } elseif(!in_array($_FILES['img2']['type'], $allowedTypes)){
+            //file type not allowed
+            $errors['img2'] = "Incorrect file type for Image 2.";
+        } elseif($_FILES['img2']['size'] > 1048576){ //file over 1MB
+            //file too big
+            $errors['img2'] = "Image 2 must be under 1MB";
+        }
+    
+    }
+    
     if(count($errors) > 0){
         output_form($errors, $eventDetails);
     } else {
@@ -59,6 +135,84 @@ if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form 
                 . "{$_SESSION['userID']}, NOW(), '{$eventDetails['Start']}', '{$eventDetails['End']}', '{$eventDetails['Name']}', '{$eventDetails['Description']}', '{$eventDetails['ContactName']}', '{$eventDetails['Number']}', '{$eventDetails['Email']}', '{$eventDetails['Location']}');";
         
         $insertResult = mysql_query($insertSQL);
+        $petInsertID = mysql_insert_id();
+     //attempt to store the file
+        $path = $_FILES['img1']['name'];
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        $filename = $petInsertID . "_a." . $ext;
+        $file = file_get_contents($_FILES['img1']['tmp_name']);
+        file_put_contents("C:\wamp\www\\3rdyearproj\images\events\\" . $filename, $file);
+        //move_uploaded_file seems to create the file, put doesn't moce the contents
+        //move_uploaded_file($_FILES['img1']['tmp_name'], "C:\wamp\www\\3rdyearproj\images\lostAndFound\\" . $filename);
+        $imgSQL = "UPDATE cms_events SET Image1 = '{$filename}'";
+        $petDetails['Image1'] = $filename;
+        if($hasImg2){
+            $path = $_FILES['img2']['name'];
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
+            $filename = $petInsertID . "_b." . $ext;
+            $file = file_get_contents($_FILES['img2']['tmp_name']);
+            file_put_contents("C:\wamp\www\\3rdyearproj\images\events\\" . $filename, $file);
+            $imgSQL .= ", Image2 = '{$filename}'";
+        }
+        $imgSQL .= " WHERE EventID = {$petInsertID};";
+        $imgResult = mysql_query($imgSQL);
+        $petDetails['Image2'] = $filename;
+        if($imgResult){
+            //output success
+    
+        //INSERT INTO CMS_Content
+        $insertContentSQL = "INSERT INTO CMS_Content VALUES (null, 'CMS_Events', '" . $petInsertID . "')";
+        $insertContentResult = mysql_query($insertContentSQL);
+        //GET ContentINsertID
+        $insertContentID = mysql_insert_id();
+        if($newStory || $existingStory){
+            if($newStory){
+                //INSERT INTO CMS_STORIES
+                $insertStorySQL = "INSERT INTO CMS_Stories VALUES (null, '{$storyName}', '" . $info['CharityID'] . "')";
+                $insertStoryResult = mysql_query($insertStorySQL);
+                //GET STORYINSERTID
+                $insertStoryID = mysql_insert_id();
+            } else {
+                //GETSTORYID FROM DDL VALUE
+                $insertStoryID = $storyID;
+            }
+            //INSERT INTO CMS_StoryCONTENT
+            $insertStoryContentSQL = "INSERT INTO CMS_StoryContent VALUES (null, '". $insertStoryID . "', '" . $insertContentID . "')";
+            $insertStoryContentResult = mysql_query($insertStoryContentSQL);
+    }
+           ?>
+<!-- Begin page content -->
+      <div class="container">
+        <div class="page-header">
+          <h1>Submit Event</h1>
+        </div>
+          <div class="col-md-9">
+        <p class="lead">Your event has been added to our database.</p>
+        <hr />
+        
+        <div class="well">
+            <img class="img-circle" data-src="holder.js/140x140" alt="140x140" style="width: 140px; height: 140px;" src="/images/events/<?=$petDetails['Image1']?>" />
+              <h2>
+            <?=$petDetails['Name']?>
+            </h2>
+            <p>
+                Description:<br />
+                <?=$petDetails['Description']?>
+            </p>
+            Contact Name: <?=$petDetails['ContactName']?> <br />
+            Contact Number: <?=$petDetails['Number']?><br />
+            Contact Email: <?=$petDetails['Email']?>
+            <?php
+                if($hasImg2){
+                    echo '<img class="img-circle" data-src="holder.js/140x140" alt="140x140" style="width: 140px; height: 140px;" src="/images/events/' . $petDetails['Image2'] . '" />';
+                }
+            ?>
+
+        </div>
+        
+          </div> <!-- /.col-md-9 -->
+            <?php
+        }
     }
     
 } else {
@@ -121,6 +275,55 @@ function output_form(&$errors, &$eventDetails){
               
               <label for="img2">Image 2</label>
               <input name="img2" id="img2" class="form-control" type="file" />
+              
+              <script>
+                function story(type){
+                    if(type === 0){ //add to existing
+                        if(document.getElementById("existingStory").checked){
+                            document.getElementById("newStory").checked = false;
+                        }
+                        <?php
+                            $storiesSQL = "SELECT * FROM cms_stories WHERE CharityID = (SELECT CharityID FROM cms_charities WHERE DomainName = '{$_SESSION['lastDomain']}');";
+                            $storiesResult = mysql_query($storiesSQL);
+                            $options = "";
+                            while($row = mysql_fetch_assoc($storiesResult)){
+                                $options .= "<option value=\"{$row['StoryID']}\">{$row['title']}</option>";
+                            }
+                            echo "var options = '{$options}';";
+                        ?>
+                        var innerHTML = '<div class="dropdown"><select name="existingStoryID" id="existingStoryID" class="form-control" required>' + options + '</select></div>';
+                        document.getElementById("storyEdit").innerHTML = innerHTML;
+                    } else{ //type is 1 - add to new
+                        if(document.getElementById("newStory").checked){
+                            document.getElementById("existingStory").checked = false;
+                        }
+                        document.getElementById("storyEdit").innerHTML = '<label for="storyName">Story Name</label><input type="text" name="storyName" id="storyName" class="form-control" required />';
+                    }
+                    
+                    if(!document.getElementById("existingStory").checked && !document.getElementById("newStory").checked){ //neither boxes checked
+                        document.getElementById("storyEdit").innerHTML = '';
+                    }
+                }    
+            </script>
+              
+              <div class="panel panel-default">
+                  <div class="panel-heading">Optional</div>
+                  <div class="panel-body">
+                    <span class="pull-left">
+                      <label for="existingStory">Add to existing story</label>
+                      <input type="checkbox" name="existingStory" id="existingStory" onChange="story(0)"/>
+                    </span>
+
+                    <span class="pull-right">
+                      <label for="newStory">Create new story</label>
+                      <input type="checkbox" name="newStory" id="newStory"  onChange="story(1)"/>
+                    </span>
+
+                    <div id="storyEdit" class="clear-both">
+
+                    </div>
+                  </div>
+              </div>
               
               <br/>
               
