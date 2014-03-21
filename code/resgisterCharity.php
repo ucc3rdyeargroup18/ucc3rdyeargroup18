@@ -5,6 +5,23 @@
     connect_to_database();
     $errors = array();
     $charityDetails = array();
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start(); //start a session if one does not exist
+    }
+
+    if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+        // last request was more than 30 minutes ago
+        session_unset();     // unset $_SESSION variable for the run-time 
+        session_destroy();   // destroy session data in storage
+        header("Location: /login.php?timeout");
+    }
+    $_SESSION['LAST_ACTIVITY'] = time(); // update last activity time stamp
+
+    if(!isset($_SESSION['validUser']) || !$_SESSION['validUser']){//user is not logged in
+        header("Location: /userRegister.php");
+        die();
+    }
+    //TODO check if user is logged in
     if(isset($_POST['submission']) && $_POST['submission'] === "true"){ // the form has been submitted, process it
         //Sanitize the input
         $charityDetails['Email'] = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
@@ -88,7 +105,7 @@
                     . "'{$charityDetails['Name']}', "
                     . "'{$charityDetails['Address1']}', "
                     . "'{$charityDetails['Address2']}', "
-                    . "'{$charityDetails['CountyID']}', "
+                    . "{$charityDetails['CountyID']}, "
                     . "'{$charityDetails['Phone']}', "
                     . "'{$charityDetails['CharityNo']}', "
                     . "'{$charityDetails['BIC']}', "
@@ -96,8 +113,19 @@
                     . "'{$charityDetails['Description']}', "
                     . "'{$perma}'); "
                     . "SET @insertid=LAST_INSERT_ID();"
-                    . "INSERT INTO cms_charitypages (CharityID, PageID) VALUES (@insertid, 1), (@insertid, 2), (@insertid, 5); "
-                    . "INSERT INTO cms_charitylayout (CharityID, Color1, Color2, Color3) VALUES (@insertid, 'f8f8f8', 'ffffff', '333333');";
+                    . "INSERT INTO cms_charitypages (CharityID, PageID, CustomTitle, isUsed) "
+                            . "VALUES "
+                            . "(@insertid, 1, 'Home', 1), "
+                            . "(@insertid, 5, 'Events', 1), "
+                            . "(@insertid, 6, 'Lost Animals', 1), "
+                            . "(@insertid, 7, 'Adopt an Animal', 1), "
+                            . "(@insertid, 8, 'Found Animals', 1), "
+                            . "(@insertid, 9, 'Resident Animals', 1), "
+                            . "(@insertid, 10, 'Submit Event', 0), "
+                            . "(@insertid, 11, 'Submit Adoptable Animal', 0), "
+                            . "(@insertid, 12, 'Submit Resident Animal', 0); "
+                    . "INSERT INTO cms_charitylayout (CharityID, Color1, Color2, Color3) VALUES (@insertid, 'f8f8f8', 'ffffff', '333333'); "
+                    . "INSERT INTO cms_charityusers (CharityID, UserID, AuthLevelsID) VALUES (@insertid, {$_SESSION['userID']}, 0);";
             $updateResult = mysqli_multi_query($mysqli, $updateSQL);
             if($updateResult){ //the charity has been registered
                 require 'header.php';
