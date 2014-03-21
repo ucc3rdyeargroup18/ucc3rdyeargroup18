@@ -122,7 +122,9 @@ if(mysql_num_rows($authResult) != 1){//the user is not authorised for this chari
         var pages = new Array();
         pages[0] = "editCharityDetails.php";
         pages[1] = "editTemplate.php";
+        pages[2] = "pageChooser.php";
         pages[3] = "manageDonations.php";
+        pages[4] = "changeLogo.php";
         var current = -1;
         function content(id){
             current = id;
@@ -175,7 +177,11 @@ if(mysql_num_rows($authResult) != 1){//the user is not authorised for this chari
                 if(element.hasAttribute("required") && element.value === ""){
                     requirementsMet = false;
                 } else {
-                    params += element.getAttribute("name") + "=" + encodeURIComponent(element.value) + "&";
+                    if(element.getAttribute("type") === "checkbox"){
+                        params += element.getAttribute("name") + "=" + encodeURIComponent(element.checked) + "&";
+                    } else {
+                        params += element.getAttribute("name") + "=" + encodeURIComponent(element.value) + "&";
+                    }
                 }
             }
             if(current === 1){
@@ -211,39 +217,15 @@ if(mysql_num_rows($authResult) != 1){//the user is not authorised for this chari
             return false;
         }
         
-        var logoData;
+        function submitLogo()
+        {
+            //TODO handle the file upload
+            alert("An Unknown Error Occurred!");
+        }
+            
         function onAJAXLoad(){
             //initialise color pickers
             $('.color').colorpicker();
-            
-            // Check for the various File API support.
-            if (window.File && window.FileReader && window.FileList && window.Blob) {
-              // Great success! All the File APIs are supported.
-            } else {
-              alert('The File APIs are not fully supported in this browser. Please upgrade your browser.');
-            }  
-            if(current === 1){
-                var reader = new FileReader(); 
-                var fileInput = document.getElementById('file');
-                fileInput.addEventListener('change', function(e) {
-			var file = fileInput.files[0];
-			var textType = /image.*/;
-
-			if (file.type.match(textType)) {
-				var reader = new FileReader();
-
-				reader.onload = function(e) {
-					//fileDisplayArea.innerText = reader.result;
-                                        logoData = reader.result;
-				};
-
-				reader.readAsDataURL(file);	
-			} else {
-				//fileDisplayArea.innerText = "File not supported!"
-                                alert("file type");
-			}
-		});
-            }
             
             $('.wysiwyg-textarea').wysihtml5({"link": false, "image": false});
         }
@@ -263,13 +245,9 @@ if(mysql_num_rows($authResult) != 1){//the user is not authorised for this chari
             <li class="navbar-section-header">Manage Site</li>
             <li id="cmsItem0"><a href="javascript:content(0);">Edit Charity Details</a></li>
             <li id="cmsItem1"><a href="javascript:content(1);">Edit Theme</a></li>
+            <li id="cmsItem4"><a href="javascript:content(4);">Change Logo</a></li>
             <li id="cmsItem2"><a href="javascript:content(2);">Choose Pages</a></li>
             <li id="cmsItem3"><a href="javascript:content(3);">Manage Donations</a></li>
-          </ul>
-          <ul class="nav nav-sidebar">
-              <li class="navbar-section-header">Manage Pages</li>
-              <li><a href="">Page 1</a></li>
-              <li><a href="">Page 2</a></li>
           </ul>
           <ul class="nav nav-sidebar">
               <li class="navbar-section-header">Manage Users</li>
@@ -311,12 +289,13 @@ function cms_top_nav(){
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#"><?=$info['Name']?></a>
+            <a class="navbar-brand" href="/<?=$charityDomain?>/home"><?=$info['Name']?></a>
         </div>
           
           <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
             <li><a href="/<?=$charityDomain?>/home">View Site</a></li>
+            <li><a href="/userManage.php">User Dashboard</a></li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Your Charities <b class="caret"></b></a>
                 <ul class="dropdown-menu">
@@ -363,16 +342,21 @@ function get_authd_charities(){
     $charityDetailsSQL = "SELECT Name, DomainName FROM cms_charities WHERE"; 
     $numRows = mysql_num_rows($authCharitiesResult);
     $i = 1;
-    while($row = mysql_fetch_assoc($authCharitiesResult)){
-        $charityDetailsSQL .= " CharityID = ";
-        $charityDetailsSQL .= $row['CharityID'];
-        if($numRows != $i){
-            $charityDetailsSQL .= " OR";
+    if($numRows > 0){
+        while($row = mysql_fetch_assoc($authCharitiesResult)){
+            $charityDetailsSQL .= " CharityID = ";
+            $charityDetailsSQL .= $row['CharityID'];
+            if($numRows != $i){
+                $charityDetailsSQL .= " OR";
+            }
+            $i++;
         }
-        $i++;
-    }
-    $charityDetailsResult = mysql_query($charityDetailsSQL);
-    while($row = mysql_fetch_assoc($charityDetailsResult)){
-        echo "<li><a href=\"/{$row['DomainName']}/cms\">{$row['Name']}</a></li>";
+        $charityDetailsResult = mysql_query($charityDetailsSQL);
+        while($row = mysql_fetch_assoc($charityDetailsResult)){
+            echo "<li><a href=\"/{$row['DomainName']}/cms\">{$row['Name']}</a></li>";
+        }
+    } else {
+        echo "<li><a href=\"/registerCharity.php\">No Charities Found</a></li>";
+        echo "<li><a href=\"/registerCharity.php\">Register your Charity</a>";
     }
 }
